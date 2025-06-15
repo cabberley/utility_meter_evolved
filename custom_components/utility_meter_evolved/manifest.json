@@ -1,0 +1,16 @@
+{
+  "domain": "utility_meter_evolved",
+  "name": "Utility Meter Evolved",
+  "codeowners": ["@cabberley"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/utility_meter",
+  "homekit": {},
+  "integration_type": "helper",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/cabberley/utility_meter_evolved/issues",
+  "requirements": ["cronsim==2.6"],
+  "ssdp": [],
+  "version": "2026.6.1",
+  "zeroconf": []
+}
