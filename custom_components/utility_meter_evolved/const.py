@@ -31,19 +31,30 @@ METER_TYPES = [
 DATA_UTILITY = "utility_meter_evolved_data"
 DATA_TARIFF_SENSORS = "utility_meter_evolved_sensors"
 
+CONF_CONFIG_CRON = "cron"
+CONF_CONFIG_PREDEFINED = "predefined"
+CONF_CONFIG_TYPE = "config_type"
+CONF_CRON_PATTERN = "cron"
 CONF_METER = "meter"
-CONF_SOURCE_SENSOR = "source"
 CONF_METER_TYPE = "cycle"
 CONF_METER_OFFSET = "offset"
 CONF_METER_DELTA_VALUES = "delta_values"
 CONF_METER_NET_CONSUMPTION = "net_consumption"
 CONF_METER_PERIODICALLY_RESETTING = "periodically_resetting"
 CONF_PAUSED = "paused"
+CONF_REMOVE_CALC_SENSOR = "remove_calc_sensor"
+CONF_SOURCE_CALC_SENSOR = "source_calc_sensor"
+CONF_SOURCE_SENSOR = "source"
 CONF_TARIFFS = "tariffs"
 CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
-CONF_CRON_PATTERN = "cron"
+
 CONF_SENSOR_ALWAYS_AVAILABLE = "always_available"
+
+CONFIG_TYPES = [
+    CONF_CONFIG_CRON,
+    CONF_CONFIG_PREDEFINED,
+]
 
 ATTR_TARIFF = "tariff"
 ATTR_TARIFFS = "tariffs"

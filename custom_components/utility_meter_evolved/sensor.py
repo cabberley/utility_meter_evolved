@@ -140,7 +140,7 @@ async def async_setup_entry(
         source_entity_id,
     )
 
-    cron_pattern = None
+    cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
     meter_type = config_entry.options[CONF_METER_TYPE]
@@ -338,10 +338,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             input_device_class = try_parse_enum(
                 SensorDeviceClass, restored.get("input_device_class")
             )
-        except KeyError:
-            # restored is a dict, but does not have all values
-            return None
-        except InvalidOperation:
+        except (KeyError, InvalidOperation):
             # last_period is corrupted
             return None
 
@@ -361,8 +358,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
-    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET})
-
+    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET, CONF_CRON_PATTERN, CONF_METER_TYPE, ATTR_SOURCE_ID})
     def __init__(
         self,
         *,
@@ -542,7 +538,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._change_status(new_state.state)
 
     def _change_status(self, tariff: str) -> None:
-        if self._tariff == tariff:
+        if self._tariff in [tariff, "total"]:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -732,6 +728,12 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
         if self._next_reset is not None:
             state_attr[ATTR_NEXT_RESET] = self._next_reset.isoformat()
+        if self._cron_pattern is not None:
+            state_attr[CONF_CRON_PATTERN] = self._cron_pattern
+        if self._period is not None:
+            state_attr[CONF_METER_TYPE] = self._period
+        if self._sensor_source_id is not None:
+            state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
 
         return state_attr
 

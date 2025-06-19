@@ -106,7 +106,13 @@ class TariffSelect(SelectEntity, RestoreEntity):
     @property
     def options(self) -> list[str]:
         """Return the available tariffs."""
-        return self._tariffs
+        tariff_options = list(self._tariffs)
+        if "total" in tariff_options:
+            _LOGGER.warning(
+                "removing 'total' from select entity. "
+            )
+            tariff_options.remove("total")
+        return tariff_options
 
     @property
     def current_option(self) -> str | None:
