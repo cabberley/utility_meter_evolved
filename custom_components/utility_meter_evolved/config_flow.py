@@ -495,18 +495,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input[CONF_SOURCE_CALC_SENSOR] = None
 
             try:
-                #if CONF_SOURCE_CALC_SENSOR in user_input:
-                if user_input[CONF_SOURCE_CALC_SENSOR] is not None:
-                    source_state = self.hass.states.get(user_input[CONF_SOURCE_CALC_SENSOR])
-                    if source_state is None:
-                        errors["base"] = "source_calc_sensor_not_found"
-                    elif source_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-                        errors["base"] = "source_calc_sensor_unavailable"
-                    else:
-                        # Validate the state as a Decimal.
-                        _ = self._validate_state(source_state)
-                #else:
-                 #   user_input[CONF_SOURCE_CALC_SENSOR] = None
+                if CONF_SOURCE_CALC_SENSOR in user_input:
+                    if user_input[CONF_SOURCE_CALC_SENSOR] is not None:
+                        source_state = self.hass.states.get(user_input[CONF_SOURCE_CALC_SENSOR])
+                        if source_state is None:
+                            errors["base"] = "source_calc_sensor_not_found"
+                        elif source_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+                            errors["base"] = "source_calc_sensor_unavailable"
+                        else:
+                            # Validate the state as a Decimal.
+                            _ = self._validate_state(source_state)
+                else:
+                   user_input[CONF_SOURCE_CALC_SENSOR] = None
             except DecimalException:
                 errors["base"] = "source_calc_sensor_not_a_number"
             if self.config_entry.options["config_type"] == CONF_CONFIG_CRON:
