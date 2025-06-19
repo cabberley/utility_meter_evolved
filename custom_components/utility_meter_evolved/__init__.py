@@ -185,6 +185,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     CONF_METER: meter,
                     CONF_TARIFF: tariff,
                 }
+            #tariff_confs[f"{meter} total"] = {
+            #    CONF_METER: meter,
+            #    CONF_TARIFF: None,
+            #}
 
             hass.async_create_task(
                 discovery.async_load_platform(
@@ -251,6 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
+        #entry.options[CONF_TARIFFS].append("total")
         hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
             entity_entry.entity_id
         )
