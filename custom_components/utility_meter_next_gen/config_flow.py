@@ -1,4 +1,4 @@
-"""Config flow for Utility Meter Evolved integration."""
+"""Config flow for Utility Meter Next Gen integration."""
 
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ from .const import (
     CONF_METER_TYPE,
     CONF_REMOVE_CALC_SENSOR,
     CONF_SENSOR_ALWAYS_AVAILABLE,
+    CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
@@ -122,6 +123,15 @@ def create_option_schema_cron(data):
                 vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
                 ),
+                vol.Required(
+                    CONF_SOURCE_CALC_MULTIPLIER, default=1
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        mode=selector.NumberSelectorMode.BOX,
+                        step="any",
+                        ),
+                ),
+
             }
         )
     else:
@@ -138,6 +148,14 @@ def create_option_schema_cron(data):
                 vol.Optional(CONF_SOURCE_CALC_SENSOR,
                     default=data[CONF_SOURCE_CALC_SENSOR] ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                ),
+                vol.Required(
+                    CONF_SOURCE_CALC_MULTIPLIER, default=data[CONF_SOURCE_CALC_MULTIPLIER]
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        mode=selector.NumberSelectorMode.BOX,
+                        step="any",
+                        ),
                 ),
             }
         )
@@ -178,6 +196,14 @@ def create_option_schema_predefined(data):
                 vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
                 ),
+                vol.Required(
+                    CONF_SOURCE_CALC_MULTIPLIER, default=1
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        mode=selector.NumberSelectorMode.BOX,
+                        step="any",
+                        ),
+                ),
             }
         )
     else:
@@ -195,6 +221,15 @@ def create_option_schema_predefined(data):
                     default=data[CONF_SOURCE_CALC_SENSOR] ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
                 ),
+                vol.Required(
+                    CONF_SOURCE_CALC_MULTIPLIER, default=data[CONF_SOURCE_CALC_MULTIPLIER]
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        mode=selector.NumberSelectorMode.BOX,
+                        step="any",
+                        ),
+                ),
+
             }
         )
     predefined_option_schema_2 = {
@@ -251,6 +286,14 @@ BASE_CONFIG_SCHEMA = vol.Schema(
 
 PREDEFINED_CYCLES_SCHEMA = vol.Schema(
     {
+        vol.Required(
+            CONF_SOURCE_CALC_MULTIPLIER, default=1
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX,
+                step="any"
+                ),
+        ),
         vol.Required(CONF_METER_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=METER_TYPES, translation_key=CONF_METER_TYPE
@@ -283,6 +326,14 @@ PREDEFINED_CYCLES_SCHEMA = vol.Schema(
 
 CRON_CYCLES_SCHEMA = vol.Schema(
     {
+        vol.Required(
+            CONF_SOURCE_CALC_MULTIPLIER, default=1
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX,
+                step="any",
+                ),
+        ),
         vol.Required(CONF_CONFIG_CRON): selector.TextSelector(),
         vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
             selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
@@ -312,11 +363,16 @@ async def validate():
 class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Github Custom config flow."""
 
+    VERSION = 3
+
     data: Optional[Dict[str, Any]]
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
-        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+        """Parse the state as a Decimal if available."""
+
+        #Throws DecimalException if the state is not a number.
+
         try:
             return (
                 None

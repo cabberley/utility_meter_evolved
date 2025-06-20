@@ -9,4 +9,4 @@ homeassistant:
 logger:
   default: info
   logs:
-    custom_components.utility_meter_evolved: debug
+    custom_components.utility_meter_next_gen: debug

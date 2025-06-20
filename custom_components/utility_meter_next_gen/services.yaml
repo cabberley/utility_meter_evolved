@@ -4,13 +4,13 @@ reset:
   target:
     entity:
       domain: select
-      integration: utility_meter_evolved
+      integration: utility_meter_next_gen
 
 calibrate:
   target:
     entity:
       domain: sensor
-      integration: utility_meter_evolved
+      integration: utility_meter_next_gen
   fields:
     value:
       example: "100"

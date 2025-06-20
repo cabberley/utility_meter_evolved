@@ -1,6 +1,6 @@
 """Constants for the utility meter component."""
 
-DOMAIN = "utility_meter_evolved"
+DOMAIN = "utility_meter_next_gen"
 
 EVERY_FIVE_MINUTES = "every-five-minutes"
 HALF_HOURLY = "half-hourly"
@@ -28,8 +28,8 @@ METER_TYPES = [
     YEARLY,
 ]
 
-DATA_UTILITY = "utility_meter_evolved_data"
-DATA_TARIFF_SENSORS = "utility_meter_evolved_sensors"
+DATA_UTILITY = "utility_meter_next_gen_data"
+DATA_TARIFF_SENSORS = "utility_meter_next_gen_sensors"
 
 CONF_CONFIG_CRON = "cron"
 CONF_CONFIG_PREDEFINED = "predefined"
@@ -44,6 +44,7 @@ CONF_METER_NET_CONSUMPTION = "net_consumption"
 CONF_METER_PERIODICALLY_RESETTING = "periodically_resetting"
 CONF_PAUSED = "paused"
 CONF_REMOVE_CALC_SENSOR = "remove_calc_sensor"
+CONF_SOURCE_CALC_MULTIPLIER = "source_calc_multiplier"
 CONF_SOURCE_CALC_SENSOR = "source_calc_sensor"
 CONF_SOURCE_SENSOR = "source"
 CONF_TARIFFS = "tariffs"
@@ -63,8 +64,8 @@ ATTR_VALUE = "value"
 ATTR_CRON_PATTERN = "cron pattern"
 ATTR_NEXT_RESET = "next_reset"
 
-SIGNAL_START_PAUSE_METER = "utility_meter_evolved_start_pause"
-SIGNAL_RESET_METER = "utility_meter_evolved_reset"
+SIGNAL_START_PAUSE_METER = "utility_meter_next_gen_start_pause"
+SIGNAL_RESET_METER = "utility_meter_next_gen_reset"
 
 SERVICE_RESET = "reset"
 SERVICE_CALIBRATE_METER = "calibrate"

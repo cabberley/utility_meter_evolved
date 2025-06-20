@@ -1,9 +1,9 @@
 {
-  "title": "Utility Meter Evolved",
+  "title": "Utility Meter Next Gen",
   "config": {
     "step": {
       "user": {
-        "title": "Create Utility Meter",
+        "title": "Create a Next Gen Utility Meter",
         "description": "Create a sensor which tracks consumption of various utilities (e.g., energy, gas, water, heating) over a configured period of time, typically monthly. The utility meter sensor optionally supports splitting the consumption by tariffs, in that case one sensor for each tariff is created as well as a select entity to choose the current tariff.",
         "data": {
           "config_type": "Configuration type",
@@ -24,13 +24,13 @@
     "step": {
       "init": {
         "data": {
-          "always_available": "[%key:component::utility_meter_evolved::config::step::user::data::always_available%]",
-          "source": "[%key:component::utility_meter_evolved::config::step::user::data::source%]",
-          "periodically_resetting": "[%key:component::utility_meter_evolved::config::step::user::data::periodically_resetting%]"
+          "always_available": "[%key:component::utility_meter_next_gen::config::step::user::data::always_available%]",
+          "source": "[%key:component::utility_meter_next_gen::config::step::user::data::source%]",
+          "periodically_resetting": "[%key:component::utility_meter_next_gen::config::step::user::data::periodically_resetting%]"
         },
         "data_description": {
-          "always_available": "[%key:component::utility_meter_evolved::config::step::user::data_description::always_available%]",
-          "periodically_resetting": "[%key:component::utility_meter_evolved::config::step::user::data_description::periodically_resetting%]"
+          "always_available": "[%key:component::utility_meter_next_gen::config::step::user::data_description::always_available%]",
+          "periodically_resetting": "[%key:component::utility_meter_next_gen::config::step::user::data_description::periodically_resetting%]"
         }
       }
     }
@@ -62,11 +62,11 @@
   "services": {
     "reset": {
       "name": "Reset",
-      "description": "Resets all counters of a utility meter."
+      "description": "Resets all counters of a Next Gen utility meter."
     },
     "calibrate": {
       "name": "Calibrate",
-      "description": "Calibrates a utility meter sensor.",
+      "description": "Calibrates a Next Gen utility meter sensor.",
       "fields": {
         "value": {
           "name": "Value",
