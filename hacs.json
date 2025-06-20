@@ -2,5 +2,5 @@
     "name": "Utility Meter Next Gen",
     "homeassistant": "2025.2.4",
     "hacs": "2.0.1",
-    "render_readme": false
+    "render_readme": true
 }
