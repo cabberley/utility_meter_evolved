@@ -24,13 +24,13 @@
     "step": {
       "init": {
         "data": {
-          "always_available": "[%key:component::utility_meter::config::step::user::data::always_available%]",
-          "source": "[%key:component::utility_meter::config::step::user::data::source%]",
-          "periodically_resetting": "[%key:component::utility_meter::config::step::user::data::periodically_resetting%]"
+          "always_available": "[%key:component::utility_meter_evolved::config::step::user::data::always_available%]",
+          "source": "[%key:component::utility_meter_evolved::config::step::user::data::source%]",
+          "periodically_resetting": "[%key:component::utility_meter_evolved::config::step::user::data::periodically_resetting%]"
         },
         "data_description": {
-          "always_available": "[%key:component::utility_meter::config::step::user::data_description::always_available%]",
-          "periodically_resetting": "[%key:component::utility_meter::config::step::user::data_description::periodically_resetting%]"
+          "always_available": "[%key:component::utility_meter_evolved::config::step::user::data_description::always_available%]",
+          "periodically_resetting": "[%key:component::utility_meter_evolved::config::step::user::data_description::periodically_resetting%]"
         }
       }
     }

@@ -11,6 +11,6 @@
   "issue_tracker": "https://github.com/cabberley/utility_meter_evolved/issues",
   "requirements": ["cronsim==2.6"],
   "ssdp": [],
-  "version": "2026.6.1",
+  "version": "2025.6.2",
   "zeroconf": []
 }

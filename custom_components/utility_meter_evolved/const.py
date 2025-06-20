@@ -38,6 +38,7 @@ CONF_CRON_PATTERN = "cron"
 CONF_METER = "meter"
 CONF_METER_TYPE = "cycle"
 CONF_METER_OFFSET = "offset"
+CONF_METER_OFFSET_DURATION_DEFAULT = {"days":0, "hours":0, "minutes":0, "seconds":0}
 CONF_METER_DELTA_VALUES = "delta_values"
 CONF_METER_NET_CONSUMPTION = "net_consumption"
 CONF_METER_PERIODICALLY_RESETTING = "periodically_resetting"
