@@ -48,7 +48,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_OFFSET = 
+DEFAULT_OFFSET = CONF_METER_OFFSET_DURATION_DEFAULT
 
 
 def validate_cron_pattern(pattern):
