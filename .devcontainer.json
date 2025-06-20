@@ -1,5 +1,5 @@
 {
-    "name": "cabberley/utility_meter_evolved",
+    "name": "cabberley/utility_meter_next_gen",
     "image": "mcr.microsoft.com/devcontainers/python:3.13",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [

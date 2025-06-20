@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -107,11 +108,12 @@ class TariffSelect(SelectEntity, RestoreEntity):
     def options(self) -> list[str]:
         """Return the available tariffs."""
         tariff_options = list(self._tariffs)
-        if "total" in tariff_options:
+        #if "total" in tariff_options:
+        if any(t.lower() == "total" for t in tariff_options):
             _LOGGER.warning(
                 "removing 'total' from select entity. "
             )
-            tariff_options.remove("total")
+            tariff_options = [t for t in tariff_options if not re.fullmatch("total", t, re.IGNORECASE)]
         return tariff_options
 
     @property

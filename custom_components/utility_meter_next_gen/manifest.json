@@ -1,6 +1,6 @@
 {
-  "domain": "utility_meter_evolved",
-  "name": "Utility Meter Evolved",
+  "domain": "utility_meter_next_gen",
+  "name": "Utility Meter Next Gen",
   "codeowners": ["@cabberley"],
   "config_flow": true,
   "dependencies": [],

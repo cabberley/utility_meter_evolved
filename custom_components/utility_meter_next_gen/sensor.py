@@ -67,6 +67,7 @@ from .const import (
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_SENSOR_ALWAYS_AVAILABLE,
+    CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
@@ -151,7 +152,7 @@ async def async_setup_entry(
         #)
     else:
         source_calc_entity_id = None
-
+    source_calc_multiplier = config_entry.options[CONF_SOURCE_CALC_MULTIPLIER]
     cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = config_entry.options[CONF_METER_OFFSET]
@@ -182,6 +183,7 @@ async def async_setup_entry(
             periodically_resetting=periodically_resetting,
             source_entity=source_entity_id,
             source_calc_entity=source_calc_entity_id,
+            source_calc_multiplier=source_calc_multiplier,
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
@@ -204,6 +206,7 @@ async def async_setup_entry(
                 periodically_resetting=periodically_resetting,
                 source_entity=source_entity_id,
                 source_calc_entity=source_calc_entity_id,
+                source_calc_multiplier = source_calc_multiplier,
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
@@ -242,6 +245,7 @@ async def async_setup_platform(
     for conf in discovery_info.values():
         meter = conf[CONF_METER]
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
+        conf_meter_calc_multiplier = conf[CONF_SOURCE_CALC_MULTIPLIER]
         conf_meter_calc_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_CALC_SENSOR]
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
@@ -290,6 +294,7 @@ async def async_setup_platform(
             periodically_resetting=conf_meter_periodically_resetting,
             source_entity=conf_meter_source,
             source_calc_entity=conf_meter_calc_source,
+            source_calc_multiplier=conf_meter_calc_multiplier,
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
@@ -374,7 +379,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
-    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET, CONF_CRON_PATTERN, CONF_METER_TYPE, ATTR_SOURCE_ID,CONF_SOURCE_CALC_SENSOR})
+    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET, CONF_CRON_PATTERN, CONF_METER_TYPE, ATTR_SOURCE_ID,CONF_SOURCE_CALC_SENSOR,CONF_SOURCE_CALC_MULTIPLIER })
     def __init__(
         self,
         *,
@@ -388,6 +393,7 @@ class UtilityMeterSensor(RestoreSensor):
         periodically_resetting,
         source_entity,
         source_calc_entity,
+        source_calc_multiplier,
         tariff_entity,
         tariff,
         unique_id,
@@ -410,6 +416,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._input_device_class = None
         self._attr_native_unit_of_measurement = None
         self._attr_calculated_value = 0
+        self._attr_multiplier = source_calc_multiplier or Decimal(1)
         self._period = meter_type
         if meter_type is not None:
             # For backwards compatibility reasons we convert the period and offset into a cron pattern
@@ -558,7 +565,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._change_status(new_state.state)
 
     def _change_status(self, tariff: str) -> None:
-        if self._tariff in [tariff, "total"]:
+        if self._tariff in [tariff, "total", "Total", "TOTAL"]:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -638,7 +645,11 @@ class UtilityMeterSensor(RestoreSensor):
                 perform_calculation = False
         if perform_calculation:
             try:
-                self._attr_calculated_value = Decimal(source_calc_state.state if source_calc_state.state else Decimal(0))* (Decimal(self.native_value) if self.native_value else Decimal(0))
+                self._attr_calculated_value = Decimal(
+                    source_calc_state.state if source_calc_state.state else Decimal(0)
+                    ) * (
+                        Decimal(self.native_value) if self.native_value else Decimal(0)
+                    ) * (Decimal(self._attr_multiplier) if self._attr_multiplier else Decimal(1))
             except (DecimalException, InvalidOperation) as err:
                 _LOGGER.error(
                     "Error while parsing value %s from sensor %s: %s",
@@ -786,6 +797,7 @@ class UtilityMeterSensor(RestoreSensor):
         if self._sensor_calc_source_id is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._sensor_calc_source_id
             state_attr[ATTR_CALC_VALUE] = str(self._attr_calculated_value)
+            state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
 
         return state_attr
 

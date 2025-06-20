@@ -794,7 +794,7 @@ async def test_restore_state(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
-    # utility_meter is loaded, now set sensors according to utility_meter:
+    # utility_meter is loaded, now set sensors according to utility_meter_next_gen:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()

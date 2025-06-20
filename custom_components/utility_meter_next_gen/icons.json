@@ -1,7 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "utility_meter_evolved": {
+      "utility_meter_next_gen": {
         "default": "mdi:counter"
       }
     },
