@@ -11,10 +11,7 @@ from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -26,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities,
 ) -> None:
     """Initialize Utility Meter config entry."""
     name = config_entry.title
