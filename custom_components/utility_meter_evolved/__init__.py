@@ -30,6 +30,7 @@ from .const import (
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_OFFSET_DURATION_DEFAULT,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_SENSOR_ALWAYS_AVAILABLE,
@@ -47,7 +48,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_OFFSET = timedelta(hours=0)
+DEFAULT_OFFSET = 
 
 
 def validate_cron_pattern(pattern):
@@ -67,23 +68,12 @@ def period_or_cron(config):
     if (
         CONF_CRON_PATTERN in config
         and CONF_METER_OFFSET in config
-        and config[CONF_METER_OFFSET] != DEFAULT_OFFSET
+        and config[CONF_METER_OFFSET] != CONF_METER_OFFSET_DURATION_DEFAULT
     ):
         raise vol.Invalid(
             f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning"
         )
     return config
-
-
-def max_28_days(config):
-    """Check that time period does not include more than 28 days."""
-    if config.days >= 28:
-        raise vol.Invalid(
-            "Unsupported offset of more than 28 days, please use a cron pattern."
-        )
-
-    return config
-
 
 METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -92,9 +82,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-            vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
-                cv.time_period, cv.positive_timedelta, max_28_days
-            ),
+            vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): cv.ensure_list,
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,

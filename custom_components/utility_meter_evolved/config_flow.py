@@ -1,27 +1,20 @@
-"""Config flow for Utility Meter integration."""
+"""Config flow for Utility Meter Evolved integration."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, Dict, Optional, cast
-
-import voluptuous as vol
-from cronsim import CronSim, CronSimError
 from datetime import datetime
-from decimal import Decimal, DecimalException, InvalidOperation
+from decimal import Decimal, DecimalException
+from typing import Any, Dict, Optional
+
+from cronsim import CronSim, CronSimError
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-)
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -31,13 +24,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import (
     BIMONTHLY,
-    CONFIG_TYPES,
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
     CONF_CONFIG_TYPE,
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_OFFSET_DURATION_DEFAULT,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_REMOVE_CALC_SENSOR,
@@ -45,6 +38,7 @@ from .const import (
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
+    CONFIG_TYPES,
     DAILY,
     DOMAIN,
     EVERY_FIVE_MINUTES,
@@ -85,25 +79,6 @@ async def _validate_config(
 
     return user_input
 
-
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=False,
-        ): selector.BooleanSelector(),
-    }
-)
 
 OPTIONS_SCHEMA_CRON = vol.Schema(
     {
@@ -228,12 +203,9 @@ def create_option_schema_predefined(data):
                 options=METER_TYPES, translation_key=CONF_METER_TYPE
             ),
         ),
-        vol.Required(CONF_METER_OFFSET, default=data[CONF_METER_OFFSET]): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=28,
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement="days",
+        vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): selector.DurationSelector(
+            selector.DurationSelectorConfig(
+                enable_day=True,
             ),
         ),
         vol.Required(CONF_TARIFFS, default=data[CONF_TARIFFS]): selector.SelectSelector(
@@ -284,12 +256,9 @@ PREDEFINED_CYCLES_SCHEMA = vol.Schema(
                 options=METER_TYPES, translation_key=CONF_METER_TYPE
             ),
         ),
-        vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=28,
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement="days",
+        vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): selector.DurationSelector(
+            selector.DurationSelectorConfig(
+                enable_day=True,
             ),
         ),
         vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
@@ -415,7 +384,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
             if not errors:
                 # Input is valid, set data.
                 self.data.update(user_input)
-                self.data[CONF_METER_OFFSET] =0
+                self.data[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT
                 self.data[CONF_METER_TYPE] = None
                 #if self.data[CONF_TARIFFS] != []:
                 #    self.data[CONF_TARIFFS].append("total")
@@ -463,7 +432,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self.config_entry = config_entry
-        self.options_schema =OPTIONS_SCHEMA
+        self.options_schema =None
 
         if config_entry.options["config_type"] == CONF_CONFIG_CRON:
             self.options_schema = create_option_schema_cron(config_entry.options)
@@ -510,7 +479,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             except DecimalException:
                 errors["base"] = "source_calc_sensor_not_a_number"
             if self.config_entry.options["config_type"] == CONF_CONFIG_CRON:
-                user_input[CONF_METER_OFFSET] =0
+                user_input[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT
                 user_input[CONF_METER_TYPE] = None
                 user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_CRON
             else:
