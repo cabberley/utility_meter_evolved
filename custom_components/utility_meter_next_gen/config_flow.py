@@ -220,8 +220,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             # Get the current repos from the config entry.
-            # sourcery skip: merge-nested-ifs
-            if CONF_REMOVE_CALC_SENSOR in user_input:
+            if CONF_REMOVE_CALC_SENSOR in user_input: # sourcery skip: merge-nested-ifs
                 if user_input[CONF_REMOVE_CALC_SENSOR]:
                     # Remove the calc sensor from the options.
                     user_input[CONF_SOURCE_CALC_SENSOR] = None

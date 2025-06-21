@@ -34,7 +34,7 @@ The main enhancements that the Utility Meter Next Gen has added to the original 
 - An option to create a "Total" Tariff that will not pause like a normal Tariff does. (You can create a sungle Sensor set that collects for each tariff period plus the total)
 - The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
 - Additional extra attributes have been added to the Sensor, so you can see quickly the key information about the sensor and what it is doing.
-- Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unneceesary recorder data bloat.
+- Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unnecessary recorder data bloat.
 
 These enhancements should provide a very versatile solution to simplify creating, using meters and calculating a secondary value.
 

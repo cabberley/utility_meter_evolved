@@ -666,39 +666,6 @@ class UtilityMeterSensor(RestoreSensor):
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
             self._attr_calculated_current_value = Decimal(0)
-#        """self._attr_calculated_last_value = Decimal(0)
-#        if self._sensor_calc_source_id is not None:
-#            if (
-#                source_calc_state := self.hass.states.get(self._sensor_calc_source_id)
-#            ) is None or source_calc_state.state == STATE_UNAVAILABLE:
-#                perform_calculation = False
-#            elif (
-#                source_calc_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-#                or not is_number(source_calc_state.state)
-#            ):
-##                _LOGGER.warning(
-#                    "Source calculation sensor %s has no valid state. "
-#                    "Please %s",
-#                    self._sensor_calc_source_id,
-#                    _suggest_report_issue(self.hass, self._sensor_calc_source_id),
-#                )
-#                perform_calculation = False
-#        if perform_calculation:
-#            try:
-#                self._attr_calculated_last_value = Decimal(
-#                    source_calc_state.state if source_calc_state.state else Decimal(0)
-#                    ) * (
-#                        Decimal(self.native_value) # noqa: PGH003 # type: ignore
-#                          if self.native_value else Decimal(0)
-#                    ) * (Decimal(self._attr_multiplier) if self._attr_multiplier else Decimal(1))
-##            except (DecimalException, InvalidOperation) as err:
- #               _LOGGER.error(
-#                    "Error while parsing value %s from sensor %s: %s",
-##                    source_calc_state.state, # noqa: PGH003 # type: ignore
-#                    self._sensor_calc_source_id,
-#                    err,
-#                )
-#                self._attr_calculated_last_value = Decimal(0)"""
         self._attr_native_value = 0
         self.async_write_ha_state()
 
