@@ -42,7 +42,7 @@ from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
+    AddConfigEntryEntitiesCallback,  # noqa: PGH003 # type: ignore
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import (
@@ -380,7 +380,15 @@ class UtilityMeterSensor(RestoreSensor):
 
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
-    _unrecorded_attributes = frozenset({ATTR_NEXT_RESET, CONF_CRON_PATTERN, CONF_METER_TYPE, ATTR_SOURCE_ID,CONF_SOURCE_CALC_SENSOR,CONF_SOURCE_CALC_MULTIPLIER })
+    _unrecorded_attributes = frozenset(
+        {ATTR_NEXT_RESET,
+         CONF_CRON_PATTERN,
+         CONF_METER_TYPE,
+         ATTR_SOURCE_ID,
+         CONF_SOURCE_CALC_SENSOR,
+         CONF_SOURCE_CALC_MULTIPLIER
+        }
+        )
     def __init__(
         self,
         *,
@@ -421,7 +429,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_multiplier = source_calc_multiplier or Decimal(1)
         self._period = meter_type
         if meter_type is not None:
-            # For backwards compatibility reasons we convert the period and offset into a cron pattern
+            # We convert the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset["minutes"],
                 hour=meter_offset["hours"],
@@ -463,7 +471,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
-        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+        """Parse the state as a Decimal if available. Throws DecimalException if not a number."""
         try:
             return (
                 None
@@ -550,7 +558,9 @@ class UtilityMeterSensor(RestoreSensor):
             adjustment := self.calculate_adjustment(old_state, new_state)
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
-            self._attr_native_value += adjustment  # type: ignore[operator] # self._attr_native_value will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
+            self._attr_native_value += adjustment  # type: ignore[operator]
+            # self._attr_native_value will be set to by the start function if it is None,
+            # therefore it always has a valid Decimal value at this line
             # Try to calculate the current value based on the source calculation sensor
             if (
                 self._sensor_calc_source_id is not None
@@ -598,8 +608,10 @@ class UtilityMeterSensor(RestoreSensor):
                 self._collecting()
             self._collecting = None
 
-        # Reset the last_valid_state during state change because if the last state before the tariff change was invalid,
-        # there is no way to know how much "adjustment" counts for which tariff. Therefore, we set the last_valid_state
+        # Reset the last_valid_state during state change because if 
+        # the last state before the tariff change was invalid,
+        # there is no way to know how much "adjustment" counts for
+        # which tariff. Therefore, we set the last_valid_state
         # to None and let the fallback mechanism handle the case that the old state was valid
         self._last_valid_state = None
 
@@ -647,41 +659,46 @@ class UtilityMeterSensor(RestoreSensor):
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
         self._last_period = (
-            Decimal(self.native_value) if self.native_value else Decimal(0)
+            Decimal(self.native_value)  # noqa: PGH003 # type: ignore
+            if self.native_value else Decimal(0)
         )
-        perform_calculation = True
-        self._attr_calculated_last_value = Decimal(0)
+#        perform_calculation = True
         if self._sensor_calc_source_id is not None:
-            if (
-                source_calc_state := self.hass.states.get(self._sensor_calc_source_id)
-            ) is None or source_calc_state.state == STATE_UNAVAILABLE:
-                perform_calculation = False
-            elif (
-                source_calc_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-                or not is_number(source_calc_state.state)
-            ):
-                _LOGGER.warning(
-                    "Source calculation sensor %s has no valid state. "
-                    "Please %s",
-                    self._sensor_calc_source_id,
-                    _suggest_report_issue(self.hass, self._sensor_calc_source_id),
-                )
-                perform_calculation = False
-        if perform_calculation:
-            try:
-                self._attr_calculated_last_value = Decimal(
-                    source_calc_state.state if source_calc_state.state else Decimal(0)
-                    ) * (
-                        Decimal(self.native_value) if self.native_value else Decimal(0)
-                    ) * (Decimal(self._attr_multiplier) if self._attr_multiplier else Decimal(1))
-            except (DecimalException, InvalidOperation) as err:
-                _LOGGER.error(
-                    "Error while parsing value %s from sensor %s: %s",
-                    source_calc_state.state,
-                    self._sensor_calc_source_id,
-                    err,
-                )
-                self._attr_calculated_last_value = Decimal(0)
+            self._attr_calculated_last_value = self._attr_calculated_current_value
+            self._attr_calculated_current_value = Decimal(0)
+#        """self._attr_calculated_last_value = Decimal(0)
+#        if self._sensor_calc_source_id is not None:
+#            if (
+#                source_calc_state := self.hass.states.get(self._sensor_calc_source_id)
+#            ) is None or source_calc_state.state == STATE_UNAVAILABLE:
+#                perform_calculation = False
+#            elif (
+#                source_calc_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+#                or not is_number(source_calc_state.state)
+#            ):
+##                _LOGGER.warning(
+#                    "Source calculation sensor %s has no valid state. "
+#                    "Please %s",
+#                    self._sensor_calc_source_id,
+#                    _suggest_report_issue(self.hass, self._sensor_calc_source_id),
+#                )
+#                perform_calculation = False
+#        if perform_calculation:
+#            try:
+#                self._attr_calculated_last_value = Decimal(
+#                    source_calc_state.state if source_calc_state.state else Decimal(0)
+#                    ) * (
+#                        Decimal(self.native_value) # noqa: PGH003 # type: ignore
+#                          if self.native_value else Decimal(0)
+#                    ) * (Decimal(self._attr_multiplier) if self._attr_multiplier else Decimal(1))
+##            except (DecimalException, InvalidOperation) as err:
+ #               _LOGGER.error(
+#                    "Error while parsing value %s from sensor %s: %s",
+##                    source_calc_state.state, # noqa: PGH003 # type: ignore
+#                    self._sensor_calc_source_id,
+#                    err,
+#                )
+#                self._attr_calculated_last_value = Decimal(0)"""
         self._attr_native_value = 0
         self.async_write_ha_state()
 
