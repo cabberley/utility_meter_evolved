@@ -22,7 +22,7 @@ from homeassistant.helpers.device import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.helper_integration import (
-    async_handle_source_entity_changes,  # type: ignore
+    async_handle_source_entity_changes,  # noqa: PGH003 # type: ignore
 )
 from homeassistant.helpers.typing import ConfigType
 

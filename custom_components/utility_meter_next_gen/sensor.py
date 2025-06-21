@@ -608,7 +608,7 @@ class UtilityMeterSensor(RestoreSensor):
                 self._collecting()
             self._collecting = None
 
-        # Reset the last_valid_state during state change because if 
+        # Reset the last_valid_state during state change because if
         # the last state before the tariff change was invalid,
         # there is no way to know how much "adjustment" counts for
         # which tariff. Therefore, we set the last_valid_state

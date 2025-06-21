@@ -126,7 +126,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
                 # Return the form of the next step.
                 if user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_CRON:
                     return await self.async_step_cron()
-                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_PREDEFINED:
+                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_PREDEFINED:  # noqa: RET505
                     return await self.async_step_predefined()
                 #return await self.async_step_repo()
 
@@ -146,7 +146,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
-                self.data.update(user_input) # noqa: PGH003 # type: ignore 
+                self.data.update(user_input) # noqa: PGH003 # type: ignore
                 self.data[CONF_METER_OFFSET] =(       # noqa: PGH003  # type: ignore
                     CONF_METER_OFFSET_DURATION_DEFAULT)
                 self.data[CONF_METER_TYPE] = None   # noqa: PGH003# type: ignore
@@ -202,7 +202,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.options_schema = create_predefined_option_schema(config_entry.options)
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None:
+    def _validate_state(state: State | None) -> Decimal | None: # noqa: F821
         """Parse the state as a Decimal if available. Throws DecimalException if not a number."""
         try:
             return (
