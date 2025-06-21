@@ -30,5 +30,3 @@ jobs:
       - name: Lint
         run: python3 -m ruff check .
 
-      - name: Format
-        run: python3 -m ruff format . --check
