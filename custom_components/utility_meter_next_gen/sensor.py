@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 from typing import Any, Self
@@ -14,12 +14,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
-    DEVICE_CLASS_UNITS,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.const import DEVICE_CLASS_UNITS
 from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -111,7 +111,8 @@ ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
 ATTR_LAST_VALID_STATE = "last_valid_state"
 ATTR_TARIFF = "tariff"
-ATTR_CALC_VALUE = "last_period_calculated_value"
+ATTR_CALC_CURRENT_VALUE = "current_period_calculated_value"
+ATTR_CALC_LAST_VALUE = "last_period_calculated_value"
 
 PRECISION = 3
 PAUSED = "paused"
@@ -415,7 +416,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_name = name
         self._input_device_class = None
         self._attr_native_unit_of_measurement = None
-        self._attr_calculated_value = 0
+        self._attr_calculated_current_value = 0
+        self._attr_calculated_last_value = 0
         self._attr_multiplier = source_calc_multiplier or Decimal(1)
         self._period = meter_type
         if meter_type is not None:
@@ -455,7 +457,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._attr_native_value = 0
-        self._attr_calculated_value = Decimal(0)
+        self._attr_calculated_current_value = Decimal(0)
+        self._attr_calculated_last_value = Decimal(0)
         self.async_write_ha_state()
 
     @staticmethod
@@ -548,7 +551,28 @@ class UtilityMeterSensor(RestoreSensor):
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
             self._attr_native_value += adjustment  # type: ignore[operator] # self._attr_native_value will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
-
+            # Try to calculate the current value based on the source calculation sensor
+            if (
+                self._sensor_calc_source_id is not None
+                and (source_calc_state := self.hass.states.get(self._sensor_calc_source_id))
+                and source_calc_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+            ):
+                try:
+                    self._attr_calculated_current_value = (
+                        Decimal(source_calc_state.state)
+                        * Decimal(self._attr_native_value)
+                        * Decimal(self._attr_multiplier)
+                    )
+                except (DecimalException, InvalidOperation) as err:
+                    _LOGGER.error(
+                        "Error while parsing value %s from sensor %s: %s",
+                        source_calc_state.state,
+                        self._sensor_calc_source_id,
+                        err,
+                    )
+                    self._attr_calculated_current_value = Decimal(0)
+            #else:
+                #self._attr_calculated_current_value = Decimal(0)
         self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = new_state_attributes.get(
             ATTR_UNIT_OF_MEASUREMENT
@@ -626,7 +650,7 @@ class UtilityMeterSensor(RestoreSensor):
             Decimal(self.native_value) if self.native_value else Decimal(0)
         )
         perform_calculation = True
-        self._attr_calculated_value = Decimal(0)
+        self._attr_calculated_last_value = Decimal(0)
         if self._sensor_calc_source_id is not None:
             if (
                 source_calc_state := self.hass.states.get(self._sensor_calc_source_id)
@@ -645,7 +669,7 @@ class UtilityMeterSensor(RestoreSensor):
                 perform_calculation = False
         if perform_calculation:
             try:
-                self._attr_calculated_value = Decimal(
+                self._attr_calculated_last_value = Decimal(
                     source_calc_state.state if source_calc_state.state else Decimal(0)
                     ) * (
                         Decimal(self.native_value) if self.native_value else Decimal(0)
@@ -657,7 +681,7 @@ class UtilityMeterSensor(RestoreSensor):
                     self._sensor_calc_source_id,
                     err,
                 )
-                self._attr_calculated_value = Decimal(0)
+                self._attr_calculated_last_value = Decimal(0)
         self._attr_native_value = 0
         self.async_write_ha_state()
 
@@ -796,7 +820,8 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
         if self._sensor_calc_source_id is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._sensor_calc_source_id
-            state_attr[ATTR_CALC_VALUE] = str(self._attr_calculated_value)
+            state_attr[ATTR_CALC_CURRENT_VALUE] = str(self._attr_calculated_current_value)
+            state_attr[ATTR_CALC_LAST_VALUE] = str(self._attr_calculated_last_value)
             state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
 
         return state_attr

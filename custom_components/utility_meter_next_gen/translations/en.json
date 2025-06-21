@@ -1,4 +1,5 @@
 {
+    "title": "Utility Meter NG",
     "config": {
         "error": {
             "tariffs_not_unique": "Tariffs must be unique",
@@ -154,6 +155,5 @@
             "description": "Resets all counters of a utility meter.",
             "name": "Reset"
         }
-    },
-    "title": "Utility Meter NG"
+    }
 }

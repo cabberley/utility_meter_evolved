@@ -4,22 +4,17 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, DecimalException
-from typing import Any, Dict, Optional
+from typing import Any, Optional  #dict
 
 from cronsim import CronSim, CronSimError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
-    SchemaConfigFlowHandler,
     SchemaFlowError,
-    SchemaFlowFormStep,
 )
 
 from .const import (
@@ -27,19 +22,13 @@ from .const import (
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
     CONF_CONFIG_TYPE,
-    CONF_METER_DELTA_VALUES,
-    CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
     CONF_METER_OFFSET_DURATION_DEFAULT,
-    CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_REMOVE_CALC_SENSOR,
-    CONF_SENSOR_ALWAYS_AVAILABLE,
-    CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
-    CONFIG_TYPES,
     DAILY,
     DOMAIN,
     EVERY_FIVE_MINUTES,
@@ -51,6 +40,13 @@ from .const import (
     QUARTERLY,
     WEEKLY,
     YEARLY,
+)
+from .schemas import (
+    BASE_CONFIG_SCHEMA,
+    CRON_CONFIG_SCHEMA,
+    PREDEFINED_CONFIG_SCHEMA,
+    create_cron_option_schema,
+    create_predefined_option_schema,
 )
 
 METER_TYPES = [
@@ -68,293 +64,6 @@ METER_TYPES = [
     YEARLY,
 ]
 
-
-async def _validate_config(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate config."""
-    try:
-        vol.Unique()(user_input[CONF_TARIFFS])
-    except CronSimError as exc:
-        raise SchemaFlowError("tariffs_not_unique") from exc
-
-    return user_input
-
-
-OPTIONS_SCHEMA_CRON = vol.Schema(
-    {
-        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Required(CONF_CONFIG_CRON): selector.TextSelector(),
-        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
-        vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_DELTA_VALUES, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-            default=True,
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=False,
-        ): selector.BooleanSelector(),
-    }
-)
-
-def create_option_schema_cron(data):
-    """Create the options schema for cron cycles."""
-
-    if data[CONF_SOURCE_CALC_SENSOR] is None:
-        cron_option_schema_1 = vol.Schema(
-            {
-                vol.Required(CONF_SOURCE_SENSOR,
-                    default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Required(
-                    CONF_SOURCE_CALC_MULTIPLIER, default=1
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        mode=selector.NumberSelectorMode.BOX,
-                        step="any",
-                        ),
-                ),
-
-            }
-        )
-    else:
-        cron_option_schema_1 = vol.Schema(
-            {
-                vol.Required(CONF_SOURCE_SENSOR,
-                    default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Optional(
-                    CONF_REMOVE_CALC_SENSOR,
-                    default=False,
-                ): selector.BooleanSelector(),
-                vol.Optional(CONF_SOURCE_CALC_SENSOR,
-                    default=data[CONF_SOURCE_CALC_SENSOR] ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Required(
-                    CONF_SOURCE_CALC_MULTIPLIER, default=data[CONF_SOURCE_CALC_MULTIPLIER]
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        mode=selector.NumberSelectorMode.BOX,
-                        step="any",
-                        ),
-                ),
-            }
-        )
-    cron_option_schema_2 = {
-        vol.Required(CONF_CONFIG_CRON, default=data[CONF_CONFIG_CRON]): selector.TextSelector(),
-        vol.Required(CONF_TARIFFS, default=data[CONF_TARIFFS]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
-        vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=data[CONF_METER_NET_CONSUMPTION]
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_DELTA_VALUES, default=data[CONF_METER_DELTA_VALUES]
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-            default=data[CONF_METER_PERIODICALLY_RESETTING],  # Assuming this is the correct key
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=data[CONF_SENSOR_ALWAYS_AVAILABLE],
-        ): selector.BooleanSelector(),
-    }
-
-    return vol.Schema({**cron_option_schema_1.schema, **cron_option_schema_2})
-
-
-def create_option_schema_predefined(data):
-    """Create the options schema for predefined cycles."""
-
-    if data[CONF_SOURCE_CALC_SENSOR] is None:
-        predefined_option_schema_1 = vol.Schema(
-            {
-                vol.Required(CONF_SOURCE_SENSOR,
-                    default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Required(
-                    CONF_SOURCE_CALC_MULTIPLIER, default=1
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        mode=selector.NumberSelectorMode.BOX,
-                        step="any",
-                        ),
-                ),
-            }
-        )
-    else:
-        predefined_option_schema_1 = vol.Schema(
-            {
-                vol.Required(CONF_SOURCE_SENSOR,
-                    default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Optional(
-                    CONF_REMOVE_CALC_SENSOR,
-                    default=False,
-                ): selector.BooleanSelector(),
-                vol.Optional(CONF_SOURCE_CALC_SENSOR,
-                    default=data[CONF_SOURCE_CALC_SENSOR] ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-                ),
-                vol.Required(
-                    CONF_SOURCE_CALC_MULTIPLIER, default=data[CONF_SOURCE_CALC_MULTIPLIER]
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        mode=selector.NumberSelectorMode.BOX,
-                        step="any",
-                        ),
-                ),
-
-            }
-        )
-    predefined_option_schema_2 = {
-        vol.Required(CONF_METER_TYPE, default=data[CONF_METER_TYPE]): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=METER_TYPES, translation_key=CONF_METER_TYPE
-            ),
-        ),
-        vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): selector.DurationSelector(
-            selector.DurationSelectorConfig(
-                enable_day=True,
-            ),
-        ),
-        vol.Required(CONF_TARIFFS, default=data[CONF_TARIFFS]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
-        vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=data[CONF_METER_NET_CONSUMPTION]
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_DELTA_VALUES, default=data[CONF_METER_DELTA_VALUES]
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-            default=data[CONF_METER_PERIODICALLY_RESETTING],  # Assuming this is the correct key
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=data[CONF_SENSOR_ALWAYS_AVAILABLE],
-        ): selector.BooleanSelector(),
-    }
-    return vol.Schema({**predefined_option_schema_1.schema, **predefined_option_schema_2})
-
-BASE_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
-        ),
-        vol.Required(CONF_CONFIG_TYPE, default=[CONF_CONFIG_PREDEFINED]): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=CONFIG_TYPES,
-                translation_key=CONF_CONFIG_TYPE,
-                mode=selector.SelectSelectorMode.LIST,
-                custom_value =False,
-                multiple=False
-            ),
-        ),
-    }
-)
-
-PREDEFINED_CYCLES_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_SOURCE_CALC_MULTIPLIER, default=1
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX,
-                step="any"
-                ),
-        ),
-        vol.Required(CONF_METER_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=METER_TYPES, translation_key=CONF_METER_TYPE
-            ),
-        ),
-        vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): selector.DurationSelector(
-            selector.DurationSelectorConfig(
-                enable_day=True,
-            ),
-        ),
-        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
-        vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_DELTA_VALUES, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-            default=True,
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=False,
-        ): selector.BooleanSelector(),
-    }
-)
-
-CRON_CYCLES_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_SOURCE_CALC_MULTIPLIER, default=1
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX,
-                step="any",
-                ),
-        ),
-        vol.Required(CONF_CONFIG_CRON): selector.TextSelector(),
-        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
-        vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_DELTA_VALUES, default=False
-        ): selector.BooleanSelector(),
-        vol.Required(
-            CONF_METER_PERIODICALLY_RESETTING,
-            default=True,
-        ): selector.BooleanSelector(),
-        vol.Optional(
-            CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=False,
-        ): selector.BooleanSelector(),
-    }
-)
-
 async def validate():
     """Validate the configuration."""
     # This function can be extended to include any validation logic needed.
@@ -365,10 +74,10 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
     VERSION = 3
 
-    data: Optional[Dict[str, Any]]
+    data: Optional[dict[str, Any]]
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None:
+    def _validate_state(state: State | None) -> Decimal | None: # type: ignore # noqa: F821
         """Parse the state as a Decimal if available."""
 
         #Throws DecimalException if the state is not a number.
@@ -381,10 +90,10 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
             )
         except DecimalException:
             return None
-    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
-        """Invoked when a user initiates a flow via the user interface."""
+    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
+        """Initiate a flow when a user starts via the user interface."""
 
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 source_state = self.hass.states.get(user_input[CONF_SOURCE_SENSOR])
@@ -427,9 +136,9 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
             step_id="user", data_schema=BASE_CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_cron(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_cron(self, user_input: Optional[dict[str, Any]] = None):
         """Second step in config flow to add a repo to watch."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             # Validate the path.
             try:
@@ -439,22 +148,19 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
-                self.data.update(user_input)
-                self.data[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT
-                self.data[CONF_METER_TYPE] = None
-                #if self.data[CONF_TARIFFS] != []:
-                #    self.data[CONF_TARIFFS].append("total")
-                # If user ticked the box show this form again so they can add an
-                # additional repo.
-                return self.async_create_entry(title=self.data["name"], data={}, options=self.data)
+                self.data.update(user_input) # type: ignore
+                self.data[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT # type: ignore
+                self.data[CONF_METER_TYPE] = None # type: ignore
+                return self.async_create_entry(
+                    title=self.data["name"], data={}, options=self.data) # type: ignore
 
         return self.async_show_form(
-            step_id="cron", data_schema=CRON_CYCLES_SCHEMA, errors=errors
+            step_id="cron", data_schema=CRON_CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_predefined(self, user_input: Optional[Dict[str, Any]] = None):
+    async def async_step_predefined(self, user_input: Optional[dict[str, Any]] = None):
         """Second step in config flow to add a repo to watch."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             # Validate the path.
             try:
@@ -465,16 +171,12 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
-                self.data.update(user_input)
-                self.data[CONF_CONFIG_CRON] = None
-                #if self.data[CONF_TARIFFS] != []:
-                #    self.data[CONF_TARIFFS].append("total")
-                # If user ticked the box show this form again so they can add an
-                # additional repo.
-                return self.async_create_entry(title=self.data["name"], data={}, options=self.data)
+                self.data.update(user_input) # type: ignore
+                self.data[CONF_CONFIG_CRON] = None # type: ignore
+                return self.async_create_entry(title=self.data["name"], data={}, options=self.data) # type: ignore
 
         return self.async_show_form(
-            step_id="predefined", data_schema=PREDEFINED_CYCLES_SCHEMA, errors=errors
+            step_id="predefined", data_schema=PREDEFINED_CONFIG_SCHEMA, errors=errors
         )
     @staticmethod
     @callback
@@ -491,9 +193,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.options_schema =None
 
         if config_entry.options["config_type"] == CONF_CONFIG_CRON:
-            self.options_schema = create_option_schema_cron(config_entry.options)
+            self.options_schema = create_cron_option_schema(config_entry.options)
         else:
-            self.options_schema = create_option_schema_predefined(config_entry.options)
+            self.options_schema = create_predefined_option_schema(config_entry.options)
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
@@ -511,7 +213,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input = None
     ):
         """Manage the options for the custom component."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             # Get the current repos from the config entry.
             if CONF_REMOVE_CALC_SENSOR in user_input:
