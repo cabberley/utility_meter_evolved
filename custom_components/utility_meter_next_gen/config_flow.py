@@ -4,19 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, DecimalException
-from typing import Any, Optional  #dict
+from typing import Any, Optional
 
 from cronsim import CronSim, CronSimError
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaCommonFlowHandler,
-    SchemaFlowError,
-)
 
+#from homeassistant.helpers.schema_config_entry_flow import (
+#    SchemaCommonFlowHandler,
+#    SchemaFlowError,
+#)
 from .const import (
     BIMONTHLY,
     CONF_CONFIG_CRON,
@@ -28,7 +27,6 @@ from .const import (
     CONF_REMOVE_CALC_SENSOR,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
-    CONF_TARIFFS,
     DAILY,
     DOMAIN,
     EVERY_FIVE_MINUTES,
@@ -74,10 +72,10 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
     VERSION = 3
 
-    data: Optional[dict[str, Any]]
+    data: Optional[dict[str, Any]]  # noqa: UP045
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None: # type: ignore # noqa: F821
+    def _validate_state(state: State | None) -> Decimal | None: # noqa: F821
         """Parse the state as a Decimal if available."""
 
         #Throws DecimalException if the state is not a number.
@@ -90,7 +88,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
             )
         except DecimalException:
             return None
-    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):  # noqa: UP045
         """Initiate a flow when a user starts via the user interface."""
 
         errors: dict[str, str] = {}
@@ -128,7 +126,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
                 # Return the form of the next step.
                 if user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_CRON:
                     return await self.async_step_cron()
-                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_PREDEFINED:
+                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_PREDEFINED:  # noqa: RET505
                     return await self.async_step_predefined()
                 #return await self.async_step_repo()
 
@@ -136,7 +134,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
             step_id="user", data_schema=BASE_CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_cron(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_cron(self, user_input: Optional[dict[str, Any]] = None):  # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -148,17 +146,21 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
-                self.data.update(user_input) # type: ignore
-                self.data[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT # type: ignore
-                self.data[CONF_METER_TYPE] = None # type: ignore
+                self.data.update(user_input) # noqa: PGH003 # type: ignore
+                self.data[CONF_METER_OFFSET] =(       # noqa: PGH003  # type: ignore
+                    CONF_METER_OFFSET_DURATION_DEFAULT)
+                self.data[CONF_METER_TYPE] = None   # noqa: PGH003# type: ignore
                 return self.async_create_entry(
-                    title=self.data["name"], data={}, options=self.data) # type: ignore
+                    title=self.data["name"],  # noqa: PGH003 # type: ignore
+                    data={},
+                    options=self.data)   # noqa: PGH003 # type: ignore
 
         return self.async_show_form(
             step_id="cron", data_schema=CRON_CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_predefined(self, user_input: Optional[dict[str, Any]] = None):
+    async def async_step_predefined(self, user_input:
+            Optional[dict[str, Any]] = None):  # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -171,9 +173,10 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
-                self.data.update(user_input) # type: ignore
-                self.data[CONF_CONFIG_CRON] = None # type: ignore
-                return self.async_create_entry(title=self.data["name"], data={}, options=self.data) # type: ignore
+                self.data.update(user_input)  # noqa: PGH003 # type: ignore
+                self.data[CONF_CONFIG_CRON] = None  # noqa: PGH003 # type: ignore
+                return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
+                            data={}, options=self.data)
 
         return self.async_show_form(
             step_id="predefined", data_schema=PREDEFINED_CONFIG_SCHEMA, errors=errors
@@ -189,6 +192,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handles options flow for the component."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize the options flow handler."""
         self.config_entry = config_entry
         self.options_schema =None
 
@@ -198,8 +202,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.options_schema = create_predefined_option_schema(config_entry.options)
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None:
-        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+    def _validate_state(state: State | None) -> Decimal | None: # noqa: F821
+        """Parse the state as a Decimal if available. Throws DecimalException if not a number."""
         try:
             return (
                 None
@@ -216,7 +220,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             # Get the current repos from the config entry.
-            if CONF_REMOVE_CALC_SENSOR in user_input:
+            if CONF_REMOVE_CALC_SENSOR in user_input: # sourcery skip: merge-nested-ifs
                 if user_input[CONF_REMOVE_CALC_SENSOR]:
                     # Remove the calc sensor from the options.
                     user_input[CONF_SOURCE_CALC_SENSOR] = None
@@ -233,7 +237,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             # Validate the state as a Decimal.
                             _ = self._validate_state(source_state)
                 else:
-                   user_input[CONF_SOURCE_CALC_SENSOR] = None
+                    user_input[CONF_SOURCE_CALC_SENSOR] = None
             except DecimalException:
                 errors["base"] = "source_calc_sensor_not_a_number"
             if self.config_entry.options["config_type"] == CONF_CONFIG_CRON:

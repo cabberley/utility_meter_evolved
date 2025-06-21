@@ -1,6 +1,6 @@
 """Support for tracking consumption over given periods of time."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from cronsim import CronSim, CronSimError
@@ -21,7 +21,9 @@ from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_entity_device,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,  # noqa: PGH003 # type: ignore
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -187,7 +189,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
