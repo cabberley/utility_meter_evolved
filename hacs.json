@@ -3,4 +3,5 @@
     "homeassistant": "2025.2.4",
     "hacs": "2.0.1",
     "render_readme": true
+    "zip_release": "utility_meter_next_gen.zip"
 }
