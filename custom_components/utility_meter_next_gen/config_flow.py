@@ -18,6 +18,8 @@ from homeassistant.core import callback
 #)
 from .const import (
     BIMONTHLY,
+    CONF_CONFIG_CALIBRATE_CALC_VALUE,
+    CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
     CONF_CONFIG_TYPE,
@@ -25,6 +27,7 @@ from .const import (
     CONF_METER_OFFSET_DURATION_DEFAULT,
     CONF_METER_TYPE,
     CONF_REMOVE_CALC_SENSOR,
+    CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     DAILY,
@@ -41,9 +44,11 @@ from .const import (
 )
 from .schemas import (
     BASE_CONFIG_SCHEMA,
-    CRON_CONFIG_SCHEMA,
-    PREDEFINED_CONFIG_SCHEMA,
+    #CRON_CONFIG_SCHEMA,
+    #PREDEFINED_CONFIG_SCHEMA,
+    create_cron_config_schema,
     create_cron_option_schema,
+    create_predefined_config_schema,
     create_predefined_option_schema,
 )
 
@@ -70,7 +75,7 @@ async def validate():
 class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Github Custom config flow."""
 
-    VERSION = 3
+    VERSION = 5
 
     data: Optional[dict[str, Any]]  # noqa: UP045
 
@@ -137,6 +142,7 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
     async def async_step_cron(self, user_input: Optional[dict[str, Any]] = None):  # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
+        self.data = self.data or {}
         if user_input is not None:
             # Validate the path.
             try:
@@ -146,6 +152,9 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
+                self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
+                self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
+                self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
                 self.data.update(user_input) # noqa: PGH003 # type: ignore
                 self.data[CONF_METER_OFFSET] =(       # noqa: PGH003  # type: ignore
                     CONF_METER_OFFSET_DURATION_DEFAULT)
@@ -156,13 +165,14 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
                     options=self.data)   # noqa: PGH003 # type: ignore
 
         return self.async_show_form(
-            step_id="cron", data_schema=CRON_CONFIG_SCHEMA, errors=errors
+            step_id="cron", data_schema=create_cron_config_schema(self.data), errors=errors
         )
 
     async def async_step_predefined(self, user_input:
             Optional[dict[str, Any]] = None):  # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
+        self.data = self.data or {}  # Initialize data if not set
         if user_input is not None:
             # Validate the path.
             try:
@@ -173,13 +183,17 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
 
             if not errors:
                 # Input is valid, set data.
+                self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
+                self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
+                self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
                 self.data.update(user_input)  # noqa: PGH003 # type: ignore
                 self.data[CONF_CONFIG_CRON] = None  # noqa: PGH003 # type: ignore
                 return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
                             data={}, options=self.data)
 
         return self.async_show_form(
-            step_id="predefined", data_schema=PREDEFINED_CONFIG_SCHEMA, errors=errors
+            #step_id="predefined", data_schema=PREDEFINED_CONFIG_SCHEMA, errors=errors
+            step_id="predefined", data_schema=create_predefined_config_schema(self.data), errors=errors
         )
     @staticmethod
     @callback

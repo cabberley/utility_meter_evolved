@@ -35,6 +35,7 @@ The main enhancements that the Utility Meter Next Gen has added to the original 
 - The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
 - Additional extra attributes have been added to the Sensor, so you can see quickly the key information about the sensor and what it is doing.
 - Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unnecessary recorder data bloat.
+- Calibration values can now be set and modified through the Utility Meter configuration.
 
 These enhancements should provide a very versatile solution to simplify creating, using meters and calculating a secondary value.
 
@@ -68,6 +69,14 @@ Follow the instructions to setup your new Meter with an optional Caculation Sens
 1. This should be a sensor that has a numeric value, not a text value, it is going to multiply its value with the input sensor.
 2. This sensor, for example if you are calculating the cost of your energy, would be a one that has a currency value reflecting the cost per x at the time.
 3. The Sensor updates the calculation value when the input sensor value changes, the calculation will use the current value of the Calculation sensor in the calculation at that time, instances where there is a lag in the Calculation Sensor's new value for the period will be reflected in the calaculations until the new value for the calaculation sensor updates for the period. In theory by the end of the period it would be assumed that the Calculation Sensor reflects the true/final value for that period and the last calculations for the period should now be correct. Unfortunately, there isn't really anything to address this without creating all sorts of weird case handling scenarios.
+
+**Some notes on the Calibration setting:**
+
+1. There are seperate calibration settings for the consumption sensor and the Calculating sensor, these are independant of each other.
+2. Each time the meter is reset, the calibration value will be applied to the starting value for the next cycle.
+3. If you are using Tariffs, the Calibration will only apply to a "Total" tariff, not the other ones you create.
+
+A good example of using the calibration sensor is if you are tracking the Cost of your Energy consumption each day. Your energy supplier my have a fixed "Daily" charge in addition to your consumption charges. By Calibrating the Cost sensor to the daily charge, you can combine your fixed and variable costs into the value giving you a more accurate value of your daily costs.
 
 **Some notes on the Multiplier setting:**
 
