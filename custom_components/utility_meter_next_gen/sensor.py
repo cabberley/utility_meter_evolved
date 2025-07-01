@@ -87,6 +87,8 @@ from .const import (
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
+    SINGLE_TARIFF,
+    TOTAL_TARIFF,
     WEEKLY,
     YEARLY,
 )
@@ -259,7 +261,7 @@ async def async_setup_platform(
         conf_meter_calibration_value = conf[CONF_CONFIG_CALIBRATE_VALUE]
         conf_meter_calibration_calc_value = conf[CONF_CONFIG_CALIBRATE_CALC_VALUE]
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
-        conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
+        conf_sensor_tariff = conf.get(CONF_TARIFF, SINGLE_TARIFF)
         conf_sensor_unique_id = (
             f"{conf_meter_unique_id}_{conf_sensor_tariff}"
             if conf_meter_unique_id
@@ -586,11 +588,17 @@ class UtilityMeterSensor(RestoreSensor):
                 and source_calc_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
             ):
                 try:
+                    if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
+                        # If the tariff is a single tariff or total, we use the calibration value
+                        calibrate_value = Decimal(self._calibrate_calc_value)
+                    else:
+                        # If the tariff is not a single tariff or total, we use 0 as the calibration value
+                        calibrate_value = Decimal(0)
                     self._attr_calculated_current_value = round((
                         Decimal(source_calc_state.state)
                         * Decimal(self._attr_native_value)
                         * Decimal(self._attr_multiplier)
-                    ) + Decimal(self._calibrate_calc_value),5)
+                    ) + calibrate_value,5)
                 except (DecimalException, InvalidOperation) as err:
                     _LOGGER.error(
                         "Error while parsing value %s from sensor %s: %s",
@@ -617,7 +625,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._change_status(new_state.state)
 
     def _change_status(self, tariff: str) -> None:
-        if self._tariff in [tariff, "total", "Total", "TOTAL"]:
+        if str(self._tariff).lower() in [tariff.lower(), TOTAL_TARIFF]:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -680,11 +688,17 @@ class UtilityMeterSensor(RestoreSensor):
             Decimal(self.native_value)  # noqa: PGH003 # type: ignore
             if self.native_value else Decimal(0)
         )
-#        perform_calculation = True
+        # update Calculated value if we have a calculation sensor
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
-            self._attr_calculated_current_value = self._calibrate_calc_value #Decimal(0)
-        self._attr_native_value = Decimal(self._calibrate_value)
+            if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
+                self._attr_calculated_current_value = self._calibrate_calc_value
+            else:
+                self._attr_calculated_current_value = Decimal(0)
+        if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
+            self._attr_native_value = Decimal(self._calibrate_value)
+        else:
+            self._attr_native_value = Decimal(0)
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
@@ -818,7 +832,7 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[CONF_CRON_PATTERN] = self._cron_pattern
         if self._period is not None:
             state_attr[CONF_METER_TYPE] = self._period
-        if self._calibrate_value != 0:
+        if self._calibrate_value != 0 and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
             state_attr[CONF_CONFIG_CALIBRATE_VALUE] = str(self._calibrate_value)
         if self._sensor_source_id is not None:
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
@@ -827,7 +841,7 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[ATTR_CALC_CURRENT_VALUE] = str(round(self._attr_calculated_current_value,5))
             state_attr[ATTR_CALC_LAST_VALUE] = str(round(self._attr_calculated_last_value,5))
             state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
-            if self._calibrate_calc_value != 0:
+            if self._calibrate_calc_value != 0  and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
                 state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
         return state_attr
 

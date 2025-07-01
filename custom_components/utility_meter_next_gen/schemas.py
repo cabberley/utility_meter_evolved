@@ -26,6 +26,7 @@ from .const import (
     CONF_TARIFFS,
     CONFIG_TYPES,
     DAILY,
+    DEVICE_CLASSES_METER,
     EVERY_FIVE_MINUTES,
     HALF_HOURLY,
     HALF_YEARLY,
@@ -57,7 +58,8 @@ BASE_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+            selector.EntitySelectorConfig(
+                domain=SENSOR_DOMAIN, filter={"device_class": DEVICE_CLASSES_METER}),
         ),
         vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
@@ -111,7 +113,8 @@ def create_calc_extras_schema(data):
                     ),
                 ),
             vol.Optional(
-                CONF_CONFIG_CALIBRATE_CALC_VALUE, default=calibrate_default): selector.NumberSelector(
+                CONF_CONFIG_CALIBRATE_CALC_VALUE,
+                default=calibrate_default): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.BOX,
                     step="any",
@@ -150,15 +153,6 @@ BASE_COMMON_CONFIG_SCHEMA = {
             default=False,
         ): selector.BooleanSelector(),
 }
-
-#PREDEFINED_CONFIG_SCHEMA = vol.Schema(
-#    {**BASE_PREDEFINED_CONFIG_SCHEMA.schema,
-#     **BASE_COMMON_CONFIG_SCHEMA}
-#    )
-#CRON_CONFIG_SCHEMA = vol.Schema(
-#    {**BASE_CRON_CONFIG_SCHEMA.schema,
-#    **BASE_COMMON_CONFIG_SCHEMA}
-#    )
 
 def create_predefined_config_schema(data):
     """Create the configuration schema for predefined cycles."""
@@ -212,14 +206,16 @@ def create_common_option_schema(data):
 
     return {
         vol.Optional(
-            CONF_CONFIG_CALIBRATE_VALUE, default=data[CONF_CONFIG_CALIBRATE_VALUE]): selector.NumberSelector(
+            CONF_CONFIG_CALIBRATE_VALUE,
+            default=data[CONF_CONFIG_CALIBRATE_VALUE]): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX,
                 step="any",
                     ),
         ),
         vol.Optional(
-            CONF_CONFIG_CALIBRATE_CALC_VALUE, default=data[CONF_CONFIG_CALIBRATE_CALC_VALUE]): selector.NumberSelector(
+            CONF_CONFIG_CALIBRATE_CALC_VALUE,
+            default=data[CONF_CONFIG_CALIBRATE_CALC_VALUE]): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX,
                 step="any",
@@ -253,7 +249,8 @@ def create_predefined_option_schema(data):
             {
                 vol.Required(CONF_SOURCE_SENSOR,
                     default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=SENSOR_DOMAIN, filter={"device_class": DEVICE_CLASSES_METER}),
                 ),
                 vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
@@ -273,7 +270,8 @@ def create_predefined_option_schema(data):
             {
                 vol.Required(CONF_SOURCE_SENSOR,
                     default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=SENSOR_DOMAIN, filter={"device_class": DEVICE_CLASSES_METER}),
                 ),
                 vol.Optional(
                     CONF_REMOVE_CALC_SENSOR,
@@ -310,7 +308,8 @@ def create_cron_option_schema(data):
             {
                 vol.Required(CONF_SOURCE_SENSOR,
                     default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=SENSOR_DOMAIN, filter={"device_class": DEVICE_CLASSES_METER}),
                 ),
                 vol.Optional(CONF_SOURCE_CALC_SENSOR ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
@@ -331,7 +330,8 @@ def create_cron_option_schema(data):
             {
                 vol.Required(CONF_SOURCE_SENSOR,
                     default=data[CONF_SOURCE_SENSOR]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=SENSOR_DOMAIN, filter={"device_class": DEVICE_CLASSES_METER}),
                 ),
                 vol.Optional(
                     CONF_REMOVE_CALC_SENSOR,

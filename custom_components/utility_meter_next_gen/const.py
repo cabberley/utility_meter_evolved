@@ -31,6 +31,9 @@ METER_TYPES = [
 DATA_UTILITY = "utility_meter_next_gen_data"
 DATA_TARIFF_SENSORS = "utility_meter_next_gen_sensors"
 
+SINGLE_TARIFF = "single_tariff"
+TOTAL_TARIFF = "total"
+
 CONF_CONFIG_CALIBRATE_CALC_VALUE = "calibrate_calc_value"
 CONF_CONFIG_CALIBRATE_VALUE = "calibrate_value"
 CONF_CONFIG_CRON = "cron"
@@ -71,3 +74,19 @@ SIGNAL_RESET_METER = "utility_meter_next_gen_reset"
 
 SERVICE_RESET = "reset"
 SERVICE_CALIBRATE_METER = "calibrate"
+
+
+DEVICE_CLASSES_METER = [
+    "data_size",
+    "distance",
+    "duration",
+    "energy",
+    "energy_storage",
+    "gas",
+    "precipitation",
+    "reactive_energy",
+    "volume",
+    "volume_storage",
+    "water",
+    "weight"
+]
