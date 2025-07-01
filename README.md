@@ -74,6 +74,7 @@ Follow the instructions to setup your new Meter with an optional Caculation Sens
 
 1. There are seperate calibration settings for the consumption sensor and the Calculating sensor, these are independant of each other.
 2. Each time the meter is reset, the calibration value will be applied to the starting value for the next cycle.
+3. If you are using Tariffs, the Calibration will only apply to a "Total" tariff, not the other ones you create.
 
 A good example of using the calibration sensor is if you are tracking the Cost of your Energy consumption each day. Your energy supplier my have a fixed "Daily" charge in addition to your consumption charges. By Calibrating the Cost sensor to the daily charge, you can combine your fixed and variable costs into the value giving you a more accurate value of your daily costs.
 
