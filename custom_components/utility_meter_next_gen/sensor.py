@@ -59,6 +59,8 @@ from .const import (
     ATTR_NEXT_RESET,
     ATTR_VALUE,
     BIMONTHLY,
+    CONF_CONFIG_CALIBRATE_CALC_VALUE,
+    CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_DELTA_VALUES,
@@ -167,6 +169,8 @@ async def async_setup_entry(
     sensor_always_available = config_entry.options.get(
         CONF_SENSOR_ALWAYS_AVAILABLE, False
     )
+    calibrate_value=config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
+    calibrate_calc_value=config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
 
     meters = []
     tariffs = config_entry.options[CONF_TARIFFS]
@@ -190,6 +194,8 @@ async def async_setup_entry(
             unique_id=entry_id,
             device_info=device_info,
             sensor_always_available=sensor_always_available,
+            calibrate_value=calibrate_value,
+            calibrate_calc_value=calibrate_calc_value,
         )
         meters.append(meter_sensor)
         hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -213,6 +219,8 @@ async def async_setup_entry(
                 unique_id=f"{entry_id}_{tariff}",
                 device_info=device_info,
                 sensor_always_available=sensor_always_available,
+                calibrate_value=calibrate_value,
+                calibrate_calc_value=calibrate_calc_value,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
@@ -248,6 +256,8 @@ async def async_setup_platform(
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_calc_multiplier = conf[CONF_SOURCE_CALC_MULTIPLIER]
         conf_meter_calc_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_CALC_SENSOR]
+        conf_meter_calibration_value = conf[CONF_CONFIG_CALIBRATE_VALUE]
+        conf_meter_calibration_calc_value = conf[CONF_CONFIG_CALIBRATE_CALC_VALUE]
         conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
         conf_sensor_unique_id = (
@@ -296,6 +306,8 @@ async def async_setup_platform(
             source_entity=conf_meter_source,
             source_calc_entity=conf_meter_calc_source,
             source_calc_multiplier=conf_meter_calc_multiplier,
+            calibrate_value=conf_meter_calibration_value,
+            calibrate_calc_value=conf_meter_calibration_calc_value,
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
@@ -386,7 +398,9 @@ class UtilityMeterSensor(RestoreSensor):
          CONF_METER_TYPE,
          ATTR_SOURCE_ID,
          CONF_SOURCE_CALC_SENSOR,
-         CONF_SOURCE_CALC_MULTIPLIER
+         CONF_SOURCE_CALC_MULTIPLIER,
+         CONF_CONFIG_CALIBRATE_CALC_VALUE,
+         CONF_CONFIG_CALIBRATE_VALUE
         }
         )
     def __init__(
@@ -403,6 +417,8 @@ class UtilityMeterSensor(RestoreSensor):
         source_entity,
         source_calc_entity,
         source_calc_multiplier,
+        calibrate_value, #=Decimal(0),
+        calibrate_calc_value, #=Decimal(0),
         tariff_entity,
         tariff,
         unique_id,
@@ -442,6 +458,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
         self._sensor_periodically_resetting = periodically_resetting
+        self._calibrate_value = Decimal(calibrate_value)  or Decimal(0)
+        self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
@@ -464,8 +482,8 @@ class UtilityMeterSensor(RestoreSensor):
         """Initialize unit and state upon source initial update."""
         self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        self._attr_native_value = 0
-        self._attr_calculated_current_value = Decimal(0)
+        self._attr_native_value = Decimal(self._calibrate_value)
+        self._attr_calculated_current_value = Decimal(self._calibrate_calc_value) # Decimal(0)
         self._attr_calculated_last_value = Decimal(0)
         self.async_write_ha_state()
 
@@ -558,7 +576,7 @@ class UtilityMeterSensor(RestoreSensor):
             adjustment := self.calculate_adjustment(old_state, new_state)
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
-            self._attr_native_value += adjustment  # type: ignore[operator]
+            self._attr_native_value += Decimal(adjustment)  # type: ignore[operator]
             # self._attr_native_value will be set to by the start function if it is None,
             # therefore it always has a valid Decimal value at this line
             # Try to calculate the current value based on the source calculation sensor
@@ -568,11 +586,11 @@ class UtilityMeterSensor(RestoreSensor):
                 and source_calc_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
             ):
                 try:
-                    self._attr_calculated_current_value = (
+                    self._attr_calculated_current_value = round((
                         Decimal(source_calc_state.state)
                         * Decimal(self._attr_native_value)
                         * Decimal(self._attr_multiplier)
-                    )
+                    ) + Decimal(self._calibrate_calc_value),5)
                 except (DecimalException, InvalidOperation) as err:
                     _LOGGER.error(
                         "Error while parsing value %s from sensor %s: %s",
@@ -665,8 +683,8 @@ class UtilityMeterSensor(RestoreSensor):
 #        perform_calculation = True
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
-            self._attr_calculated_current_value = Decimal(0)
-        self._attr_native_value = 0
+            self._attr_calculated_current_value = self._calibrate_calc_value #Decimal(0)
+        self._attr_native_value = Decimal(self._calibrate_value)
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
@@ -692,7 +710,7 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_value = last_sensor_data.native_value
+            self._attr_native_value = Decimal(last_sensor_data.native_value)
             self._input_device_class = last_sensor_data.input_device_class
             self._attr_native_unit_of_measurement = (
                 last_sensor_data.native_unit_of_measurement
@@ -800,14 +818,17 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[CONF_CRON_PATTERN] = self._cron_pattern
         if self._period is not None:
             state_attr[CONF_METER_TYPE] = self._period
+        if self._calibrate_value != 0:
+            state_attr[CONF_CONFIG_CALIBRATE_VALUE] = str(self._calibrate_value)
         if self._sensor_source_id is not None:
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
         if self._sensor_calc_source_id is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._sensor_calc_source_id
-            state_attr[ATTR_CALC_CURRENT_VALUE] = str(self._attr_calculated_current_value)
-            state_attr[ATTR_CALC_LAST_VALUE] = str(self._attr_calculated_last_value)
+            state_attr[ATTR_CALC_CURRENT_VALUE] = str(round(self._attr_calculated_current_value,5))
+            state_attr[ATTR_CALC_LAST_VALUE] = str(round(self._attr_calculated_last_value,5))
             state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
-
+            if self._calibrate_calc_value != 0:
+                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
         return state_attr
 
     @property

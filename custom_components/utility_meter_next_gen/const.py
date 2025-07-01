@@ -31,6 +31,8 @@ METER_TYPES = [
 DATA_UTILITY = "utility_meter_next_gen_data"
 DATA_TARIFF_SENSORS = "utility_meter_next_gen_sensors"
 
+CONF_CONFIG_CALIBRATE_CALC_VALUE = "calibrate_calc_value"
+CONF_CONFIG_CALIBRATE_VALUE = "calibrate_value"
 CONF_CONFIG_CRON = "cron"
 CONF_CONFIG_PREDEFINED = "predefined"
 CONF_CONFIG_TYPE = "config_type"

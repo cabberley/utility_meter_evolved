@@ -27,6 +27,8 @@ from homeassistant.helpers.helper_integration import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CONFIG_CALIBRATE_CALC_VALUE,
+    CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_DELTA_VALUES,
@@ -295,6 +297,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
-    return True
+    if config_entry.version == 3 or config_entry.version is None:
+        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
+        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_VALUE: 0}
+        hass.config_entries.async_update_entry(config_entry, options=new, version=4)
 
-#CONF_SOURCE_CALC_MULTIPLIER
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    if config_entry.version == 4 or config_entry.version is None:
+        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
+        hass.config_entries.async_update_entry(config_entry, options=new, version=5)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
