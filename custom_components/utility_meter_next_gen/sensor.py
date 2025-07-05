@@ -976,7 +976,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         state_attr = {
-            "linked Sensor": self._entity_id,
+            "linked_utility_meter": self._entity_id,
             ATTR_STATUS: (
                 self._attr_collecting_status
                 if self._attr_collecting_status is not None
