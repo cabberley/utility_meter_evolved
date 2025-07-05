@@ -904,7 +904,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         self,
         hass: HomeAssistant,
         attribute: str,
-        calibrate_calc_value: Decimal | Decimal,
+        calibrate_calc_value: Decimal,
         cron_pattern: str | None,
         device_class: SensorDeviceClass | None,
         device_info,
