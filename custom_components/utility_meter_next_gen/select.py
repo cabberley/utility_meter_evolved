@@ -107,7 +107,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         tariff_options = list(self._tariffs)
         #if "total" in tariff_options:
         if any(t.lower() == "total" for t in tariff_options):
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "removing 'total' from select entity. "
             )
             tariff_options = [t for t in tariff_options if not re.fullmatch("total", t, re.IGNORECASE)]
