@@ -103,7 +103,7 @@ def validate_is_number(value):
     raise vol.Invalid("Value is not a number")
 
 def clean_string(input_string):
-    # Replace non-alphanumeric characters with underscores
+    """Replace non-alphanumeric characters with underscores."""
     result = re.sub(r'[^a-zA-Z0-9]', '_', input_string)
     # Remove consecutive underscores
     result = re.sub(r'_+', '_', result)
