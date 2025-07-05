@@ -992,8 +992,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         """Handle the sensor state changes."""
         new_state = event.data["new_state"]
         _LOGGER.debug("Received new state: %s", new_state)
-        _LOGGER.debug("Received new state.state: %s", new_state.state)
-
+        
         self._attr_available = True #new_state #!= STATE_UNAVAILABLE
 
         self._attr_native_value = None
