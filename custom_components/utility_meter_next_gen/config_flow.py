@@ -12,17 +12,14 @@ from homeassistant import config_entries
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
 
-#from homeassistant.helpers.schema_config_entry_flow import (
-#    SchemaCommonFlowHandler,
-#    SchemaFlowError,
-#)
 from .const import (
-    BIMONTHLY,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
     CONF_CONFIG_TYPE,
+    CONF_CREATE_CALCULATION_SENSOR,
+    CONF_CREATE_CALCULATION_SENSOR_DEFAULT,
     CONF_METER_OFFSET,
     CONF_METER_OFFSET_DURATION_DEFAULT,
     CONF_METER_TYPE,
@@ -30,42 +27,17 @@ from .const import (
     CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
-    DAILY,
+    CONF_TARIFFS,
     DOMAIN,
-    EVERY_FIVE_MINUTES,
-    HALF_HOURLY,
-    HALF_YEARLY,
-    HOURLY,
-    MONTHLY,
-    QUARTER_HOURLY,
-    QUARTERLY,
-    WEEKLY,
-    YEARLY,
 )
 from .schemas import (
     BASE_CONFIG_SCHEMA,
-    #CRON_CONFIG_SCHEMA,
-    #PREDEFINED_CONFIG_SCHEMA,
     create_cron_config_schema,
     create_cron_option_schema,
     create_predefined_config_schema,
     create_predefined_option_schema,
 )
 
-METER_TYPES = [
-    "none",
-    EVERY_FIVE_MINUTES,
-    QUARTER_HOURLY,
-    HALF_HOURLY,
-    HOURLY,
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    BIMONTHLY,
-    QUARTERLY,
-    HALF_YEARLY,
-    YEARLY,
-]
 
 async def validate():
     """Validate the configuration."""
@@ -75,7 +47,7 @@ async def validate():
 class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Github Custom config flow."""
 
-    VERSION = 5
+    VERSION = 6
 
     data: Optional[dict[str, Any]]  # noqa: UP045
 
@@ -154,11 +126,13 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
                 # Input is valid, set data.
                 self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
                 self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
+                self.data[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
                 self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
-                self.data.update(user_input) # noqa: PGH003 # type: ignore
                 self.data[CONF_METER_OFFSET] =(       # noqa: PGH003  # type: ignore
                     CONF_METER_OFFSET_DURATION_DEFAULT)
                 self.data[CONF_METER_TYPE] = None   # noqa: PGH003# type: ignore
+                self.data[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
+                self.data.update(user_input) # noqa: PGH003 # type: ignore
                 return self.async_create_entry(
                     title=self.data["name"],  # noqa: PGH003 # type: ignore
                     data={},
@@ -185,15 +159,18 @@ class UtilityMeterEvolvedCustomConfigFlow(config_entries.ConfigFlow, domain=DOMA
                 # Input is valid, set data.
                 self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
                 self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
-                self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
-                self.data.update(user_input)  # noqa: PGH003 # type: ignore
                 self.data[CONF_CONFIG_CRON] = None  # noqa: PGH003 # type: ignore
+                self.data[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
+                self.data[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
+                self.data.update(user_input)  # noqa: PGH003 # type: ignore
                 return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
                             data={}, options=self.data)
 
         return self.async_show_form(
-            #step_id="predefined", data_schema=PREDEFINED_CONFIG_SCHEMA, errors=errors
-            step_id="predefined", data_schema=create_predefined_config_schema(self.data), errors=errors
+            step_id="predefined",
+            data_schema=create_predefined_config_schema(self.data),
+            errors=errors
         )
     @staticmethod
     @callback
@@ -207,7 +184,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the options flow handler."""
-        self.config_entry = config_entry
+        #self.config_entry = config_entry
         self.options_schema =None
 
         if config_entry.options["config_type"] == CONF_CONFIG_CRON:
@@ -238,6 +215,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if user_input[CONF_REMOVE_CALC_SENSOR]:
                     # Remove the calc sensor from the options.
                     user_input[CONF_SOURCE_CALC_SENSOR] = None
+                    user_input[CONF_CREATE_CALCULATION_SENSOR] = False
 
             try:
                 if CONF_SOURCE_CALC_SENSOR in user_input:
@@ -252,12 +230,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             _ = self._validate_state(source_state)
                 else:
                     user_input[CONF_SOURCE_CALC_SENSOR] = None
+                    user_input[CONF_CREATE_CALCULATION_SENSOR] = False
             except DecimalException:
                 errors["base"] = "source_calc_sensor_not_a_number"
+            if self.config_entry.options[CONF_TARIFFS] == [] or self.config_entry.options[CONF_TARIFFS] is None:
+                user_input[CONF_TARIFFS] = []
             if self.config_entry.options["config_type"] == CONF_CONFIG_CRON:
+                user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_CRON
                 user_input[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT
                 user_input[CONF_METER_TYPE] = None
-                user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_CRON
             else:
                 user_input[CONF_CONFIG_CRON] = None
                 user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_PREDEFINED

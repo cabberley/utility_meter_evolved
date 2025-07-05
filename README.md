@@ -30,9 +30,10 @@ The main enhancements that the Utility Meter Next Gen has added to the original 
 
 - Creating Cron schedule patterns via the Frontend of HA, you no longer need to create them in configuration.yaml!
 - Additional Predefined schedules that should accomodate the majority of people's needs.
+- The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
+- Option to create an additional Sensor for the Calculated Value, if you have added a sensor to create a calculated value.
 - All settings of the Meter can be modified through the Frontend. The options reflect the schedule type you created the Meter with (Predefined or CRON).
 - An option to create a "Total" Tariff that will not pause like a normal Tariff does. (You can create a sungle Sensor set that collects for each tariff period plus the total)
-- The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
 - Additional extra attributes have been added to the Sensor, so you can see quickly the key information about the sensor and what it is doing.
 - Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unnecessary recorder data bloat.
 - Calibration values can now be set and modified through the Utility Meter configuration.
@@ -69,6 +70,11 @@ Follow the instructions to setup your new Meter with an optional Caculation Sens
 1. This should be a sensor that has a numeric value, not a text value, it is going to multiply its value with the input sensor.
 2. This sensor, for example if you are calculating the cost of your energy, would be a one that has a currency value reflecting the cost per x at the time.
 3. The Sensor updates the calculation value when the input sensor value changes, the calculation will use the current value of the Calculation sensor in the calculation at that time, instances where there is a lag in the Calculation Sensor's new value for the period will be reflected in the calaculations until the new value for the calaculation sensor updates for the period. In theory by the end of the period it would be assumed that the Calculation Sensor reflects the true/final value for that period and the last calculations for the period should now be correct. Unfortunately, there isn't really anything to address this without creating all sorts of weird case handling scenarios.
+
+**Some notes on the use of Tariffs**
+
+1. You only have the option to create Tariffs when you initally create the Utlity Meter.
+2. If you did create a Tariff you can remove or add additional tariffs and reconfigure.
 
 **Some notes on the Calibration setting:**
 

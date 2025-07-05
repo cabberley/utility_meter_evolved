@@ -1,4 +1,6 @@
 """Schemas for configuring the Utility Meter Next Gen component."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -6,12 +8,13 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 
 from .const import (
-    BIMONTHLY,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
     CONF_CONFIG_TYPE,
+    CONF_CREATE_CALCULATION_SENSOR,
+    CONF_CREATE_CALCULATION_SENSOR_DEFAULT,
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -25,34 +28,11 @@ from .const import (
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
     CONFIG_TYPES,
-    DAILY,
     DEVICE_CLASSES_METER,
-    EVERY_FIVE_MINUTES,
-    HALF_HOURLY,
-    HALF_YEARLY,
-    HOURLY,
-    MONTHLY,
-    QUARTER_HOURLY,
-    QUARTERLY,
-    WEEKLY,
-    YEARLY,
+    METER_TYPES,
 )
 
-METER_TYPES = [
-    "none",
-    EVERY_FIVE_MINUTES,
-    QUARTER_HOURLY,
-    HALF_HOURLY,
-    HOURLY,
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    BIMONTHLY,
-    QUARTERLY,
-    HALF_YEARLY,
-    YEARLY,
-]
-
+_LOGGER = logging.getLogger(__name__)
 
 BASE_CONFIG_SCHEMA = vol.Schema(
     {
@@ -102,8 +82,15 @@ def create_calc_extras_schema(data):
     """Create the calibration schema for predefined and cron cycles."""
     calibrate_default = data.get(CONF_CONFIG_CALIBRATE_CALC_VALUE,0)
     multiplier_default = data.get(CONF_SOURCE_CALC_MULTIPLIER, 1)
+    create_calc_sensor_default = data.get(CONF_CREATE_CALCULATION_SENSOR, CONF_CREATE_CALCULATION_SENSOR_DEFAULT)
     if data[CONF_SOURCE_CALC_SENSOR] is not None:
         return {
+            vol.Required(
+                CONF_CREATE_CALCULATION_SENSOR,
+                default=create_calc_sensor_default):
+                    selector.BooleanSelector(
+                        selector.BooleanSelectorConfig()
+                ),
             vol.Required(
                 CONF_SOURCE_CALC_MULTIPLIER, default=multiplier_default
                 ): selector.NumberSelector(
@@ -122,7 +109,6 @@ def create_calc_extras_schema(data):
                 ),
             }
     return {}
-
 
 
 BASE_COMMON_CONFIG_SCHEMA = {
@@ -150,7 +136,7 @@ BASE_COMMON_CONFIG_SCHEMA = {
         ): selector.BooleanSelector(),
         vol.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
-            default=False,
+            default=True,
         ): selector.BooleanSelector(),
 }
 
@@ -203,8 +189,13 @@ def create_base_cron_option_schema(data):
 
 def create_common_option_schema(data):
     """Create the common options schema for all configurations."""
-
-    return {
+    option_schema = {
+        vol.Required(
+            CONF_CREATE_CALCULATION_SENSOR,
+            default=data[CONF_CREATE_CALCULATION_SENSOR],):
+                selector.BooleanSelector(
+                    selector.BooleanSelectorConfig()
+            ),
         vol.Optional(
             CONF_CONFIG_CALIBRATE_VALUE,
             default=data[CONF_CONFIG_CALIBRATE_VALUE]): selector.NumberSelector(
@@ -221,25 +212,47 @@ def create_common_option_schema(data):
                 step="any",
                     ),
         ),
-        vol.Required(CONF_TARIFFS, default=data[CONF_TARIFFS]): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
-        ),
+    }
+    #if not hasattr(data, CONF_TARIFFS):
+    #    _LOGGER.debug("Config has no Current Tariffs")
+    if data[CONF_TARIFFS] != [] and data[CONF_TARIFFS] is not None:
+        _LOGGER.debug("Schema Current Tariffs: %s", data[CONF_TARIFFS] )
+        option_schema[
+            vol.Required(CONF_TARIFFS, default=data[CONF_TARIFFS])
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[], custom_value=True, multiple=True
+            ),
+        )
+    else:
+        _LOGGER.debug("Schema Current Tariffs: %s", data[CONF_TARIFFS] )
+        option_schema[
+            vol.Optional(CONF_TARIFFS)
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[], custom_value=False, multiple=False
+            ),
+        )
+    option_schema |= {
         vol.Required(
-            CONF_METER_NET_CONSUMPTION, default=data[CONF_METER_NET_CONSUMPTION]
+            CONF_METER_NET_CONSUMPTION,
+            default=data[CONF_METER_NET_CONSUMPTION],
         ): selector.BooleanSelector(),
         vol.Required(
             CONF_METER_DELTA_VALUES, default=data[CONF_METER_DELTA_VALUES]
         ): selector.BooleanSelector(),
         vol.Required(
             CONF_METER_PERIODICALLY_RESETTING,
-            default=data[CONF_METER_PERIODICALLY_RESETTING],  # Assuming this is the correct key
+            default=data[
+                CONF_METER_PERIODICALLY_RESETTING
+            ],  # Assuming this is the correct key
         ): selector.BooleanSelector(),
         vol.Optional(
             CONF_SENSOR_ALWAYS_AVAILABLE,
             default=data[CONF_SENSOR_ALWAYS_AVAILABLE],
         ): selector.BooleanSelector(),
     }
-
+    return option_schema
 
 def create_predefined_option_schema(data):
     """Create the options schema for predefined cycles."""

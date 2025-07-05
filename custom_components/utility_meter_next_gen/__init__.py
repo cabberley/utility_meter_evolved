@@ -29,6 +29,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
+    CONF_CREATE_CALCULATION_SENSOR,
+    CONF_CREATE_CALCULATION_SENSOR_DEFAULT,
     CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_DELTA_VALUES,
@@ -37,6 +39,7 @@ from .const import (
     CONF_METER_OFFSET_DURATION_DEFAULT,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_METER_TYPES,
     CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_CALC_MULTIPLIER,
     CONF_SOURCE_SENSOR,
@@ -46,15 +49,11 @@ from .const import (
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
-    METER_TYPES,
     SERVICE_RESET,
     SIGNAL_RESET_METER,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_OFFSET = CONF_METER_OFFSET_DURATION_DEFAULT
-
 
 def validate_cron_pattern(pattern):
     """Check that the pattern is well-formed."""
@@ -64,7 +63,6 @@ def validate_cron_pattern(pattern):
         _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
         raise vol.Invalid("Invalid pattern") from err
     return pattern
-
 
 def period_or_cron(config):
     """Check that if cron pattern is used, then meter type and offsite must be removed."""
@@ -86,7 +84,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
+            vol.Optional(CONF_METER_TYPE): vol.In(CONF_METER_TYPES),
             vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): cv.ensure_list,
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
@@ -178,10 +176,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     CONF_METER: meter,
                     CONF_TARIFF: tariff,
                 }
-            #tariff_confs[f"{meter} total"] = {
-            #    CONF_METER: meter,
-            #    CONF_TARIFF: None,
-            #}
 
             hass.async_create_task(
                 discovery.async_load_platform(
@@ -307,6 +301,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 4 or config_entry.version is None:
         new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
         hass.config_entries.async_update_entry(config_entry, options=new, version=5)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    if config_entry.version == 5 or config_entry.version is None:
+        new = {**config_entry.options, CONF_CREATE_CALCULATION_SENSOR: CONF_CREATE_CALCULATION_SENSOR_DEFAULT}
+        hass.config_entries.async_update_entry(config_entry, options=new, version=6)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

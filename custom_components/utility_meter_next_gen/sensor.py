@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CURRENCY_DOLLAR,
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -41,13 +42,11 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,  # noqa: PGH003 # type: ignore
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
+    async_track_state_report_event,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
@@ -56,11 +55,19 @@ from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
+    ATTR_CALC_CURRENT_VALUE,
+    ATTR_CALC_LAST_VALUE,
+    ATTR_LAST_PERIOD,
+    ATTR_LAST_VALID_STATE,
     ATTR_NEXT_RESET,
+    ATTR_SOURCE_ID,
+    ATTR_STATUS,
+    ATTR_TARIFF,
     ATTR_VALUE,
-    BIMONTHLY,
+    COLLECTING,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
+    CONF_CREATE_CALCULATION_SENSOR,
     CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_DELTA_VALUES,
@@ -75,53 +82,18 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
-    DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
-    EVERY_FIVE_MINUTES,
-    HALF_HOURLY,
-    HALF_YEARLY,
-    HOURLY,
-    MONTHLY,
-    QUARTER_HOURLY,
-    QUARTERLY,
+    PAUSED,
+    PERIOD2CRON,
+    PRECISION,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     SINGLE_TARIFF,
     TOTAL_TARIFF,
-    WEEKLY,
-    YEARLY,
 )
 
-PERIOD2CRON = {
-    EVERY_FIVE_MINUTES: "{minute}/5 * * * *",
-    QUARTER_HOURLY: "{minute}/15 * * * *",
-    HALF_HOURLY: "{minute}/30 * * * *",
-    HOURLY: "{minute} * * * *",
-    DAILY: "{minute} {hour} * * *",
-    WEEKLY: "{minute} {hour} * * {day}",
-    MONTHLY: "{minute} {hour} {day} * *",
-    BIMONTHLY: "{minute} {hour} {day} */2 *",
-    QUARTERLY: "{minute} {hour} {day} */3 *",
-    HALF_YEARLY: "{minute} {hour} {day} */6 *",
-    YEARLY: "{minute} {hour} {day} 1/12 *",
-}
-
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SOURCE_ID = "source"
-ATTR_STATUS = "status"
-ATTR_PERIOD = "meter_period"
-ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_VALID_STATE = "last_valid_state"
-ATTR_TARIFF = "tariff"
-ATTR_CALC_CURRENT_VALUE = "current_period_calculated_value"
-ATTR_CALC_LAST_VALUE = "last_period_calculated_value"
-
-PRECISION = 3
-PAUSED = "paused"
-COLLECTING = "collecting"
-
 
 def validate_is_number(value):
     """Validate value is a number."""
@@ -133,7 +105,7 @@ def validate_is_number(value):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize Utility Meter config entry."""
     entry_id = config_entry.entry_id
@@ -150,14 +122,11 @@ async def async_setup_entry(
         source_calc_entity_id = er.async_validate_entity_id(
             registry, config_entry.options[CONF_SOURCE_CALC_SENSOR]
         )
-
-        #device_info = async_device_info_to_link_from_entity(
-        #hass,
-        #source_calc_entity_id,
-        #)
     else:
         source_calc_entity_id = None
-    source_calc_multiplier = config_entry.options[CONF_SOURCE_CALC_MULTIPLIER]
+    calibrate_calc_value=config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
+    calibrate_value=config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
+    create_calc_sensor = config_entry.options[CONF_CREATE_CALCULATION_SENSOR]
     cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = config_entry.options[CONF_METER_OFFSET]
@@ -167,67 +136,114 @@ async def async_setup_entry(
     name = config_entry.title
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
-    tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
     sensor_always_available = config_entry.options.get(
         CONF_SENSOR_ALWAYS_AVAILABLE, False
     )
-    calibrate_value=config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
-    calibrate_calc_value=config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
+    source_calc_multiplier = config_entry.options[CONF_SOURCE_CALC_MULTIPLIER]
+    tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
 
     meters = []
+    calc_sensors = []
     tariffs = config_entry.options[CONF_TARIFFS]
 
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
         meter_sensor = UtilityMeterSensor(
+            calibrate_calc_value=calibrate_calc_value,
+            calibrate_value=calibrate_value,
             cron_pattern=cron_pattern,
             delta_values=delta_values,
+            device_info=device_info,
             meter_offset=meter_offset,
             meter_type=meter_type,
             name=name,
             net_consumption=net_consumption,
             parent_meter=entry_id,
             periodically_resetting=periodically_resetting,
-            source_entity=source_entity_id,
+            sensor_always_available=sensor_always_available,
             source_calc_entity=source_calc_entity_id,
             source_calc_multiplier=source_calc_multiplier,
+            source_entity=source_entity_id,
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
-            device_info=device_info,
-            sensor_always_available=sensor_always_available,
-            calibrate_value=calibrate_value,
-            calibrate_calc_value=calibrate_calc_value,
         )
         meters.append(meter_sensor)
         hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+
+        if create_calc_sensor:
+            # Create a calculated sensor for the total consumption
+            calc_sensor = UtilityMeterCalculatedSensor(
+                attribute = ATTR_CALC_CURRENT_VALUE,
+                calibrate_calc_value=calibrate_calc_value,
+                cron_pattern=cron_pattern,
+                device_class = None, #device_class,
+                device_info = device_info,
+                entity_id = f"sensor.{name}",
+                hass = hass,
+                icon = None,
+                meter_type=meter_type,
+                name = f"{name} Calculated",
+                source_calc_entity=source_calc_entity_id,
+                source_entity=source_entity_id,
+                state_class = None, #state_class,
+                tariff=None,
+                unique_id = f"{name} Calculated",
+                uom = None,
+            )
+            calc_sensors.append(calc_sensor)
+            hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(calc_sensor)
+
     else:
         # Add sensors for each tariff
         for tariff in tariffs:
             meter_sensor = UtilityMeterSensor(
+                calibrate_calc_value=calibrate_calc_value,
+                calibrate_value=calibrate_value,
                 cron_pattern=cron_pattern,
                 delta_values=delta_values,
+                device_info=device_info,
                 meter_offset=meter_offset,
                 meter_type=meter_type,
                 name=f"{name} {tariff}",
                 net_consumption=net_consumption,
                 parent_meter=entry_id,
                 periodically_resetting=periodically_resetting,
-                source_entity=source_entity_id,
+                sensor_always_available=sensor_always_available,
                 source_calc_entity=source_calc_entity_id,
                 source_calc_multiplier = source_calc_multiplier,
+                source_entity=source_entity_id,
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
-                device_info=device_info,
-                sensor_always_available=sensor_always_available,
-                calibrate_value=calibrate_value,
-                calibrate_calc_value=calibrate_calc_value,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+            if create_calc_sensor:
+                # Create a calculated sensor for the tariff consumption
+                calc_sensor = UtilityMeterCalculatedSensor(
+                attribute = ATTR_CALC_CURRENT_VALUE,
+                calibrate_calc_value=calibrate_calc_value,
+                cron_pattern=cron_pattern,
+                device_class = None, #device_class,
+                device_info = device_info,
+                entity_id = f"sensor.{name}_{tariff}",
+                hass = hass,
+                icon = None,
+                meter_type=meter_type,
+                name = f"{name} {tariff} Calculated",
+                source_calc_entity=source_calc_entity_id,
+                source_entity=source_entity_id,
+                state_class = None, #state_class,
+                tariff=tariff,
+                unique_id = f"{name} {tariff} Calculated",
+                uom = None,
+                )
+                calc_sensors.append(calc_sensor)
+                hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(calc_sensor)
 
     async_add_entities(meters)
+    async_add_entities(calc_sensors)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -453,9 +469,10 @@ class UtilityMeterSensor(RestoreSensor):
                 hour=meter_offset["hours"],
                 day=meter_offset["days"],
             )
-            _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
+            _LOGGER.debug("CRON pattern TYPE: %s", self._cron_pattern)
         else:
             self._cron_pattern = cron_pattern
+            _LOGGER.debug("CRON pattern CRON: %s", self._cron_pattern)
         self._sensor_always_available = sensor_always_available
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
@@ -579,9 +596,7 @@ class UtilityMeterSensor(RestoreSensor):
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
             self._attr_native_value += Decimal(adjustment)  # type: ignore[operator]
-            # self._attr_native_value will be set to by the start function if it is None,
-            # therefore it always has a valid Decimal value at this line
-            # Try to calculate the current value based on the source calculation sensor
+
             if (
                 self._sensor_calc_source_id is not None
                 and (source_calc_state := self.hass.states.get(self._sensor_calc_source_id))
@@ -598,7 +613,7 @@ class UtilityMeterSensor(RestoreSensor):
                         Decimal(source_calc_state.state)
                         * Decimal(self._attr_native_value)
                         * Decimal(self._attr_multiplier)
-                    ) + calibrate_value,5)
+                    ) + calibrate_value,PRECISION)
                 except (DecimalException, InvalidOperation) as err:
                     _LOGGER.error(
                         "Error while parsing value %s from sensor %s: %s",
@@ -607,8 +622,6 @@ class UtilityMeterSensor(RestoreSensor):
                         err,
                     )
                     self._attr_calculated_current_value = Decimal(0)
-            #else:
-                #self._attr_calculated_current_value = Decimal(0)
         self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = new_state_attributes.get(
             ATTR_UNIT_OF_MEASUREMENT
@@ -724,7 +737,9 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_value = Decimal(last_sensor_data.native_value)
+            self._attr_native_value = (None
+                    if last_sensor_data.native_value is None
+                    else Decimal(last_sensor_data.native_value))
             self._input_device_class = last_sensor_data.input_device_class
             self._attr_native_unit_of_measurement = (
                 last_sensor_data.native_unit_of_measurement
@@ -819,11 +834,6 @@ class UtilityMeterSensor(RestoreSensor):
         }
         if self._tariff is not None:
             state_attr[ATTR_TARIFF] = self._tariff
-        # last_reset in utility meter was used before last_reset was added for long term
-        # statistics in base sensor. base sensor only supports last reset
-        # sensors with state_class set to total.
-        # To avoid a breaking change we set last_reset directly
-        # in extra state attributes.
         if last_reset := self._last_reset:
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
         if self._next_reset is not None:
@@ -832,16 +842,21 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[CONF_CRON_PATTERN] = self._cron_pattern
         if self._period is not None:
             state_attr[CONF_METER_TYPE] = self._period
-        if self._calibrate_value != 0 and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
+        if (self._calibrate_value != 0
+            and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]
+            ):
             state_attr[CONF_CONFIG_CALIBRATE_VALUE] = str(self._calibrate_value)
         if self._sensor_source_id is not None:
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
         if self._sensor_calc_source_id is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._sensor_calc_source_id
-            state_attr[ATTR_CALC_CURRENT_VALUE] = str(round(self._attr_calculated_current_value,5))
-            state_attr[ATTR_CALC_LAST_VALUE] = str(round(self._attr_calculated_last_value,5))
+            state_attr[ATTR_CALC_CURRENT_VALUE] = (
+                str(round(self._attr_calculated_current_value,PRECISION)))
+            state_attr[ATTR_CALC_LAST_VALUE] = (
+                str(round(self._attr_calculated_last_value,PRECISION)))
             state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
-            if self._calibrate_calc_value != 0  and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
+            if (self._calibrate_calc_value != 0
+                and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]):
                 state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
         return state_attr
 
@@ -866,3 +881,184 @@ class UtilityMeterSensor(RestoreSensor):
         return UtilitySensorExtraStoredData.from_dict(
             restored_last_extra_data.as_dict()
         )
+
+
+#################################################################################################
+class UtilityMeterCalculatedSensor(RestoreSensor):
+    """Representation of an Seperate Calculated sensor."""
+
+    _attr_should_poll = False
+    _attr_collecting_status = None
+    _unrecorded_attributes = frozenset(
+        {ATTR_NEXT_RESET,
+         ATTR_SOURCE_ID,
+         CONF_CONFIG_CALIBRATE_CALC_VALUE,
+         CONF_CONFIG_CALIBRATE_VALUE,
+         CONF_CRON_PATTERN,
+         CONF_METER_TYPE,
+         CONF_SOURCE_CALC_MULTIPLIER,
+         CONF_SOURCE_CALC_SENSOR
+        }
+        )
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        attribute: str,
+        calibrate_calc_value: Decimal | Decimal,
+        cron_pattern: str | None,
+        device_class: SensorDeviceClass | None,
+        device_info,
+        entity_id: str,
+        icon: str | None,
+        meter_type: str | None,
+        name: str,
+        source_calc_entity: str | None,
+        source_entity: str | None,
+        state_class: SensorStateClass | None,
+        tariff: str | None,
+        unique_id: str | None,
+        uom: str | None,
+        #value_template: Template | None,
+    ) -> None:
+        """Initialize the sensor."""
+        self._attr_collecting_status = None
+        self._attr_device_class = (SensorDeviceClass.MONETARY
+                                   if device_class is None else device_class)
+        self._attr_device_info = device_info
+        self._attr_icon = "mdi:currency-usd" if icon is None else icon
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = CURRENCY_DOLLAR if uom is None else uom
+        self._attr_state_class = SensorStateClass.TOTAL if state_class is None else state_class
+        self._attr_unique_id = unique_id
+        self._attribute = attribute
+        self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
+        self._cron_pattern = cron_pattern
+        self._entity_id = entity_id
+        self._has_logged = False
+        self._period = meter_type
+        self._sensor_source_id = source_entity
+        self._source_calc_entity = source_calc_entity
+        self._tariff = tariff if tariff is not None else SINGLE_TARIFF
+
+    def start(self, attributes: Mapping[str, Any]) -> None:
+        """Initialize unit and state upon source initial update."""
+        #self._attr_device_class = attributes.get(ATTR_DEVICE_CLASS)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle added to Hass."""
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, self._entity_id, self._async_attribute_sensor_state_listener
+            )
+        )
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass, self._entity_id, self._async_attribute_sensor_state_listener
+            )
+        )
+
+        # Replay current state of source entities
+        state = self.hass.states.get(self._entity_id)
+        state_event = Event("", {"entity_id": self._entity_id, "new_state": state})
+        self._async_attribute_sensor_state_listener(state_event, update_state=False)
+        _LOGGER.debug("Complete Async added to Hass: %s", state)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the sensor."""
+        state_attr = {}
+        if self._attr_collecting_status is not None:
+            state_attr[ATTR_STATUS] = self._attr_collecting_status
+        else:
+            state_attr[ATTR_STATUS] = "unknown"
+        if self._period is not None:
+            state_attr[CONF_METER_TYPE] = self._period
+        elif self._cron_pattern is not None:
+            state_attr[CONF_CRON_PATTERN] = self._cron_pattern
+        if self._sensor_source_id is not None:
+            state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
+        if self._source_calc_entity is not None:
+            state_attr[CONF_SOURCE_CALC_SENSOR] = self._source_calc_entity
+            if (self._calibrate_calc_value != 0
+                and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]):
+                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
+        return state_attr
+
+    @callback
+    def _async_attribute_sensor_state_listener(
+        self, event: Event, update_state: bool = True
+    ) -> None:
+        """Handle the sensor state changes."""
+        new_state = event.data["new_state"]
+        _LOGGER.debug("Received new state: %s", new_state)
+        _LOGGER.debug("Received new state.state: %s", new_state.state)
+
+        self._attr_available = True #new_state #!= STATE_UNAVAILABLE
+
+        self._attr_native_value = None
+        if (
+            new_state is None
+            or new_state.state is None
+            or new_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+            or hasattr(new_state, "attributes")  is False
+        ):
+            if not update_state:
+                _LOGGER.debug("Ignoring state update")
+            else:
+                _LOGGER.debug(
+                    "State update for %s is None or unavailable, setting to STATE_UNAVAILABLE",
+                    self._entity_id,
+                )
+                self._attr_native_value = Decimal(0)
+                self._attr_collecting_status = STATE_UNAVAILABLE
+                self.async_write_ha_state()
+            return
+        if hasattr(new_state, "attributes"):
+            if self._attribute not in new_state.attributes:
+                if not self._has_logged:
+                    _LOGGER.error(
+                        "Attribute (%s) not found in Attributes for entity %s, Dictionary: %s",
+                        self._attribute,
+                        self._entity_id,
+                        new_state,
+                    )
+                self._has_logged = True
+                self._attr_native_value = STATE_UNAVAILABLE
+                self.async_write_ha_state()
+                return
+
+        _LOGGER.debug("state update step 1")
+        _LOGGER.debug("state update step 1 %s",self._attribute)
+        _LOGGER.debug("state update step 1a %s",new_state.state)
+        _LOGGER.debug("state update step 1a %s",new_state.attributes)
+
+        self._has_logged = False
+        if self._attribute in new_state.attributes:
+            _LOGGER.debug("State attributes: %s", new_state.attributes)
+
+            value = new_state.attributes[self._attribute]
+            if isinstance(value, str):
+                try:
+                    value = Decimal(value)
+                except (InvalidOperation, ValueError):
+                    _LOGGER.error(
+                        "Invalid value for attribute (%s) in entity %s: %s",
+                        self._attribute,
+                        self._entity_id,
+                        value,
+                    )
+                    self._attr_native_value = STATE_UNAVAILABLE
+                    self.async_write_ha_state()
+                    return
+            self._attr_native_value = value
+            _LOGGER.debug(
+                "Setting attribute (%s) value: %s",
+                self._attribute,
+                self._attr_native_value,
+            )
+        if "status" in new_state.attributes:
+            self._attr_collecting_status = new_state.attributes["status"]
+        _LOGGER.debug("state update step 3")
+        self.async_write_ha_state()
+        return
