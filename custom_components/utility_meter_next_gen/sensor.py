@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
+import re
 from typing import Any, Self
 
 from cronsim import CronSim
@@ -101,6 +102,13 @@ def validate_is_number(value):
         return value
     raise vol.Invalid("Value is not a number")
 
+def clean_string(input_string):
+    """Replace non-alphanumeric characters with underscores."""
+    result = re.sub(r'[^a-zA-Z0-9]', '_', input_string)
+    # Remove consecutive underscores
+    result = re.sub(r'_+', '_', result)
+    # Convert to lowercase
+    return result.lower()
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -179,7 +187,7 @@ async def async_setup_entry(
                 cron_pattern=cron_pattern,
                 device_class = None, #device_class,
                 device_info = device_info,
-                entity_id = f"sensor.{name}",
+                entity_id = f"sensor.{clean_string(name)}",
                 hass = hass,
                 icon = None,
                 meter_type=meter_type,
@@ -227,7 +235,7 @@ async def async_setup_entry(
                 cron_pattern=cron_pattern,
                 device_class = None, #device_class,
                 device_info = device_info,
-                entity_id = f"sensor.{name}_{tariff}",
+                entity_id = f"sensor.{clean_string(name)}_{clean_string(tariff)}",
                 hass = hass,
                 icon = None,
                 meter_type=meter_type,
@@ -967,11 +975,14 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        state_attr = {}
-        if self._attr_collecting_status is not None:
-            state_attr[ATTR_STATUS] = self._attr_collecting_status
-        else:
-            state_attr[ATTR_STATUS] = "unknown"
+        state_attr = {
+            "linked_utility_meter": self._entity_id,
+            ATTR_STATUS: (
+                self._attr_collecting_status
+                if self._attr_collecting_status is not None
+                else "unknown"
+            ),
+        }
         if self._period is not None:
             state_attr[CONF_METER_TYPE] = self._period
         elif self._cron_pattern is not None:
@@ -992,7 +1003,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         """Handle the sensor state changes."""
         new_state = event.data["new_state"]
         _LOGGER.debug("Received new state: %s", new_state)
-        
+
         self._attr_available = True #new_state #!= STATE_UNAVAILABLE
 
         self._attr_native_value = None

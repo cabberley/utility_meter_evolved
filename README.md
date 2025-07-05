@@ -59,6 +59,10 @@ Follow the instructions to setup your new Meter with an optional Caculation Sens
 
 ## Some Additional helpers
 
+### Warning
+
+**Do not change the "Entity ID" after creating your meter, it will break the Sennors that this integration creates**
+
 ### Selection of Sensors to Monitor
 
 **Some notes on selecting Input Sensor:**
@@ -71,6 +75,8 @@ Follow the instructions to setup your new Meter with an optional Caculation Sens
 1. This should be a sensor that has a numeric value, not a text value, it is going to multiply its value with the input sensor.
 2. This sensor, for example if you are calculating the cost of your energy, would be a one that has a currency value reflecting the cost per x at the time.
 3. The Sensor updates the calculation value when the input sensor value changes, the calculation will use the current value of the Calculation sensor in the calculation at that time, instances where there is a lag in the Calculation Sensor's new value for the period will be reflected in the calaculations until the new value for the calaculation sensor updates for the period. In theory by the end of the period it would be assumed that the Calculation Sensor reflects the true/final value for that period and the last calculations for the period should now be correct. Unfortunately, there isn't really anything to address this without creating all sorts of weird case handling scenarios.
+
+### Some notes on optional configuration settings for your Meters
 
 **Some notes on the use of Tariffs**
 
