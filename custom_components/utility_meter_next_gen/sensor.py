@@ -60,12 +60,16 @@ from .const import (
     ATTR_CALC_LAST_VALUE,
     ATTR_LAST_PERIOD,
     ATTR_LAST_VALID_STATE,
+    ATTR_LINKED_METER,
     ATTR_NEXT_RESET,
+    ATTR_PREDEFINED_CYCLE,
     ATTR_SOURCE_ID,
     ATTR_STATUS,
     ATTR_TARIFF,
     ATTR_VALUE,
     COLLECTING,
+    CONF_CONFIG_CALIBRATE_APPLY,
+    CONF_CONFIG_CALIBRATE_CALC_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CREATE_CALCULATION_SENSOR,
@@ -85,6 +89,7 @@ from .const import (
     CONF_TARIFFS,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    METER_NAME_TYPES,
     PAUSED,
     PERIOD2CRON,
     PRECISION,
@@ -96,19 +101,29 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def validate_is_number(value):
     """Validate value is a number."""
     if is_number(value):
         return value
     raise vol.Invalid("Value is not a number")
 
+
 def clean_string(input_string):
     """Replace non-alphanumeric characters with underscores."""
-    result = re.sub(r'[^a-zA-Z0-9]', '_', input_string)
+    result = re.sub(r"[^a-zA-Z0-9]", "_", input_string)
     # Remove consecutive underscores
-    result = re.sub(r'_+', '_', result)
+    result = re.sub(r"_+", "_", result)
     # Convert to lowercase
     return result.lower()
+
+def clean_string_display(input_string):
+    """Replace non-alphanumeric characters with underscores."""
+    result = re.sub(r"[^a-zA-Z0-9]", " ", input_string)
+    # Remove consecutive underscores
+    result = re.sub(r" +", " ", result)
+    # Convert to lowercase
+    return result.title()
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -132,8 +147,10 @@ async def async_setup_entry(
         )
     else:
         source_calc_entity_id = None
-    calibrate_calc_value=config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
-    calibrate_value=config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
+    calibrate_calc_apply = config_entry.options[CONF_CONFIG_CALIBRATE_CALC_APPLY]
+    calibrate_calc_value = config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
+    calibrate_apply = config_entry.options[CONF_CONFIG_CALIBRATE_APPLY]
+    calibrate_value = config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
     create_calc_sensor = config_entry.options[CONF_CREATE_CALCULATION_SENSOR]
     cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
@@ -154,57 +171,139 @@ async def async_setup_entry(
     calc_sensors = []
     tariffs = config_entry.options[CONF_TARIFFS]
 
-    if not tariffs:
-        # Add single sensor, not gated by a tariff selector
-        meter_sensor = UtilityMeterSensor(
-            calibrate_calc_value=calibrate_calc_value,
-            calibrate_value=calibrate_value,
-            cron_pattern=cron_pattern,
-            delta_values=delta_values,
-            device_info=device_info,
-            meter_offset=meter_offset,
-            meter_type=meter_type,
-            name=name,
-            net_consumption=net_consumption,
-            parent_meter=entry_id,
-            periodically_resetting=periodically_resetting,
-            sensor_always_available=sensor_always_available,
-            source_calc_entity=source_calc_entity_id,
-            source_calc_multiplier=source_calc_multiplier,
-            source_entity=source_entity_id,
-            tariff_entity=tariff_entity,
-            tariff=None,
-            unique_id=entry_id,
-        )
-        meters.append(meter_sensor)
-        hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+    if meter_type is not None and not isinstance(meter_type, str) and len(meter_type) > 1:
+        for meter in meter_type:
+            if not tariffs:
+                # Add single sensor, not gated by a tariff selector
+                meter_sensor = UtilityMeterSensor(
+                    calibrate_calc_value=(
+                        calibrate_calc_value
+                        if calibrate_calc_apply == meter
+                        else Decimal(0)
+                    ),
+                    calibrate_value=(
+                        calibrate_value if calibrate_apply == meter else Decimal(0)
+                    ),
+                    cron_pattern=cron_pattern,
+                    delta_values=delta_values,
+                    device_info=device_info,
+                    meter_offset=meter_offset,
+                    meter_type=meter,
+                    name=f"{name} {METER_NAME_TYPES[meter]}",
+                    net_consumption=net_consumption,
+                    parent_meter=entry_id,
+                    periodically_resetting=periodically_resetting,
+                    sensor_always_available=sensor_always_available,
+                    source_calc_entity=source_calc_entity_id,
+                    source_calc_multiplier=source_calc_multiplier,
+                    source_entity=source_entity_id,
+                    tariff_entity=tariff_entity,
+                    tariff=None,
+                    unique_id=f"{entry_id}_{METER_NAME_TYPES[meter]}",
+                )
+                meters.append(meter_sensor)
+                hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                    meter_sensor
+                )
 
-        if create_calc_sensor:
-            # Create a calculated sensor for the total consumption
-            calc_sensor = UtilityMeterCalculatedSensor(
-                attribute = ATTR_CALC_CURRENT_VALUE,
-                calibrate_calc_value=calibrate_calc_value,
-                cron_pattern=cron_pattern,
-                device_class = None, #device_class,
-                device_info = device_info,
-                entity_id = f"sensor.{clean_string(name)}",
-                hass = hass,
-                icon = None,
-                meter_type=meter_type,
-                name = f"{name} Calculated",
-                source_calc_entity=source_calc_entity_id,
-                source_entity=source_entity_id,
-                state_class = None, #state_class,
-                tariff=None,
-                unique_id = f"{name} Calculated",
-                uom = None,
-            )
-            calc_sensors.append(calc_sensor)
-            hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(calc_sensor)
+                if create_calc_sensor:
+                    # Create a calculated sensor for the total consumption
+                    calc_sensor = UtilityMeterCalculatedSensor(
+                        attribute=ATTR_CALC_CURRENT_VALUE,
+                        calibrate_calc_value=(
+                            calibrate_calc_value
+                            if calibrate_calc_apply == meter
+                            else Decimal(0)
+                        ),
+                        cron_pattern=cron_pattern,
+                        device_class=None,
+                        device_info=device_info,
+                        entity_id=(
+                            f"sensor.{clean_string(name)}_{clean_string(METER_NAME_TYPES[meter])}"
+                        ),
+                        hass=hass,
+                        icon=None,
+                        meter_type=meter,
+                        name=f"{name} {METER_NAME_TYPES[meter]} Calculated",
+                        source_calc_entity=source_calc_entity_id,
+                        source_entity=source_entity_id,
+                        state_class=None,
+                        tariff=None,
+                        unique_id=f"{name} {METER_NAME_TYPES[meter]} Calculated",
+                        uom=None,
+                    )
+                    calc_sensors.append(calc_sensor)
+                    hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                        calc_sensor
+                    )
+
+            else:
+                # Add sensors for each tariff
+                for tariff in tariffs:
+                    meter_sensor = UtilityMeterSensor(
+                        calibrate_calc_value=(
+                            calibrate_calc_value
+                            if calibrate_calc_apply == meter
+                            else Decimal(0)
+                        ),
+                        calibrate_value=(
+                            calibrate_value if calibrate_apply == meter else Decimal(0)
+                        ),
+                        cron_pattern=cron_pattern,
+                        delta_values=delta_values,
+                        device_info=device_info,
+                        meter_offset=meter_offset,
+                        meter_type=meter,
+                        name=f"{name} {METER_NAME_TYPES[meter]} {tariff}",
+                        net_consumption=net_consumption,
+                        parent_meter=entry_id,
+                        periodically_resetting=periodically_resetting,
+                        sensor_always_available=sensor_always_available,
+                        source_calc_entity=source_calc_entity_id,
+                        source_calc_multiplier=source_calc_multiplier,
+                        source_entity=source_entity_id,
+                        tariff_entity=tariff_entity,
+                        tariff=tariff,
+                        unique_id=f"{entry_id}_{METER_NAME_TYPES[meter]}_{tariff}",
+                    )
+                    meters.append(meter_sensor)
+                    hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                        meter_sensor
+                    )
+                    if create_calc_sensor:
+                        # Create a calculated sensor for the tariff consumption
+                        calc_sensor = UtilityMeterCalculatedSensor(
+                            attribute=ATTR_CALC_CURRENT_VALUE,
+                            calibrate_calc_value=(
+                                calibrate_calc_value
+                                if calibrate_calc_apply == meter
+                                else Decimal(0)
+                            ),
+                            cron_pattern=cron_pattern,
+                            device_class=None,
+                            device_info=device_info,
+                            entity_id=(
+                                f"sensor.{clean_string(name)}_{clean_string(METER_NAME_TYPES[meter])}_{clean_string(tariff)}"
+                            ),
+                            hass=hass,
+                            icon=None,
+                            meter_type=meter,
+                            name=f"{name} {METER_NAME_TYPES[meter]} {tariff} Calculated",
+                            source_calc_entity=source_calc_entity_id,
+                            source_entity=source_entity_id,
+                            state_class=None,
+                            tariff=tariff,
+                            unique_id=f"{name} {METER_NAME_TYPES[meter]} {tariff} Calculated",
+                            uom=None,
+                        )
+                        calc_sensors.append(calc_sensor)
+                        hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                            calc_sensor
+                        )
 
     else:
-        # Add sensors for each tariff
-        for tariff in tariffs:
+        if not tariffs:
+            # Add single sensor, not gated by a tariff selector
             meter_sensor = UtilityMeterSensor(
                 calibrate_calc_value=calibrate_calc_value,
                 calibrate_value=calibrate_value,
@@ -213,42 +312,97 @@ async def async_setup_entry(
                 device_info=device_info,
                 meter_offset=meter_offset,
                 meter_type=meter_type,
-                name=f"{name} {tariff}",
+                name=name,
                 net_consumption=net_consumption,
                 parent_meter=entry_id,
                 periodically_resetting=periodically_resetting,
                 sensor_always_available=sensor_always_available,
                 source_calc_entity=source_calc_entity_id,
-                source_calc_multiplier = source_calc_multiplier,
+                source_calc_multiplier=source_calc_multiplier,
                 source_entity=source_entity_id,
                 tariff_entity=tariff_entity,
-                tariff=tariff,
-                unique_id=f"{entry_id}_{tariff}",
+                tariff=None,
+                unique_id=entry_id,
             )
             meters.append(meter_sensor)
             hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+
             if create_calc_sensor:
-                # Create a calculated sensor for the tariff consumption
+                # Create a calculated sensor for the total consumption
                 calc_sensor = UtilityMeterCalculatedSensor(
-                attribute = ATTR_CALC_CURRENT_VALUE,
-                calibrate_calc_value=calibrate_calc_value,
-                cron_pattern=cron_pattern,
-                device_class = None, #device_class,
-                device_info = device_info,
-                entity_id = f"sensor.{clean_string(name)}_{clean_string(tariff)}",
-                hass = hass,
-                icon = None,
-                meter_type=meter_type,
-                name = f"{name} {tariff} Calculated",
-                source_calc_entity=source_calc_entity_id,
-                source_entity=source_entity_id,
-                state_class = None, #state_class,
-                tariff=tariff,
-                unique_id = f"{name} {tariff} Calculated",
-                uom = None,
+                    attribute=ATTR_CALC_CURRENT_VALUE,
+                    calibrate_calc_value=calibrate_calc_value,
+                    cron_pattern=cron_pattern,
+                    device_class=None,
+                    device_info=device_info,
+                    entity_id=f"sensor.{clean_string(name)}",
+                    hass=hass,
+                    icon=None,
+                    meter_type=meter_type,
+                    name=f"{name} Calculated",
+                    source_calc_entity=source_calc_entity_id,
+                    source_entity=source_entity_id,
+                    state_class=None,
+                    tariff=None,
+                    unique_id=f"{name} Calculated",
+                    uom=None,
                 )
                 calc_sensors.append(calc_sensor)
-                hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(calc_sensor)
+                hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                    calc_sensor
+                )
+
+        else:
+            # Add sensors for each tariff
+            for tariff in tariffs:
+                meter_sensor = UtilityMeterSensor(
+                    calibrate_calc_value=calibrate_calc_value,
+                    calibrate_value=calibrate_value,
+                    cron_pattern=cron_pattern,
+                    delta_values=delta_values,
+                    device_info=device_info,
+                    meter_offset=meter_offset,
+                    meter_type=meter_type,
+                    name=f"{name} {tariff}",
+                    net_consumption=net_consumption,
+                    parent_meter=entry_id,
+                    periodically_resetting=periodically_resetting,
+                    sensor_always_available=sensor_always_available,
+                    source_calc_entity=source_calc_entity_id,
+                    source_calc_multiplier=source_calc_multiplier,
+                    source_entity=source_entity_id,
+                    tariff_entity=tariff_entity,
+                    tariff=tariff,
+                    unique_id=f"{entry_id}_{tariff}",
+                )
+                meters.append(meter_sensor)
+                hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                    meter_sensor
+                )
+                if create_calc_sensor:
+                    # Create a calculated sensor for the tariff consumption
+                    calc_sensor = UtilityMeterCalculatedSensor(
+                        attribute=ATTR_CALC_CURRENT_VALUE,
+                        calibrate_calc_value=calibrate_calc_value,
+                        cron_pattern=cron_pattern,
+                        device_class=None,  # device_class,
+                        device_info=device_info,
+                        entity_id=f"sensor.{clean_string(name)}_{clean_string(tariff)}",
+                        hass=hass,
+                        icon=None,
+                        meter_type=meter_type,
+                        name=f"{name} {tariff} Calculated",
+                        source_calc_entity=source_calc_entity_id,
+                        source_entity=source_entity_id,
+                        state_class=None,
+                        tariff=tariff,
+                        unique_id=f"{name} {tariff} Calculated",
+                        uom=None,
+                    )
+                    calc_sensors.append(calc_sensor)
+                    hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(
+                        calc_sensor
+                    )
 
     async_add_entities(meters)
     async_add_entities(calc_sensors)
@@ -419,16 +573,18 @@ class UtilityMeterSensor(RestoreSensor):
     _attr_translation_key = "utility_meter"
     _attr_should_poll = False
     _unrecorded_attributes = frozenset(
-        {ATTR_NEXT_RESET,
-         CONF_CRON_PATTERN,
-         CONF_METER_TYPE,
-         ATTR_SOURCE_ID,
-         CONF_SOURCE_CALC_SENSOR,
-         CONF_SOURCE_CALC_MULTIPLIER,
-         CONF_CONFIG_CALIBRATE_CALC_VALUE,
-         CONF_CONFIG_CALIBRATE_VALUE
+        {
+            ATTR_NEXT_RESET,
+            CONF_CRON_PATTERN,
+            CONF_METER_TYPE,
+            ATTR_SOURCE_ID,
+            CONF_SOURCE_CALC_SENSOR,
+            CONF_SOURCE_CALC_MULTIPLIER,
+            CONF_CONFIG_CALIBRATE_CALC_VALUE,
+            CONF_CONFIG_CALIBRATE_VALUE,
         }
-        )
+    )
+
     def __init__(
         self,
         *,
@@ -443,8 +599,8 @@ class UtilityMeterSensor(RestoreSensor):
         source_entity,
         source_calc_entity,
         source_calc_multiplier,
-        calibrate_value, #=Decimal(0),
-        calibrate_calc_value, #=Decimal(0),
+        calibrate_value,  # =Decimal(0),
+        calibrate_calc_value,  # =Decimal(0),
         tariff_entity,
         tariff,
         unique_id,
@@ -485,7 +641,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
         self._sensor_periodically_resetting = periodically_resetting
-        self._calibrate_value = Decimal(calibrate_value)  or Decimal(0)
+        self._calibrate_value = Decimal(calibrate_value) or Decimal(0)
         self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
         self._tariff = tariff
         self._tariff_entity = tariff_entity
@@ -499,7 +655,7 @@ class UtilityMeterSensor(RestoreSensor):
                 self._cron_pattern,
                 dt_util.now(
                     dt_util.get_default_time_zone()
-                ),  # we need timezone for DST purposes (see issue #102984)
+                ),
             )
             if self._cron_pattern
             else None
@@ -510,7 +666,9 @@ class UtilityMeterSensor(RestoreSensor):
         self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._attr_native_value = Decimal(self._calibrate_value)
-        self._attr_calculated_current_value = Decimal(self._calibrate_calc_value) # Decimal(0)
+        self._attr_calculated_current_value = Decimal(
+            self._calibrate_calc_value
+        )
         self._attr_calculated_last_value = Decimal(0)
         self.async_write_ha_state()
 
@@ -607,7 +765,11 @@ class UtilityMeterSensor(RestoreSensor):
 
             if (
                 self._sensor_calc_source_id is not None
-                and (source_calc_state := self.hass.states.get(self._sensor_calc_source_id))
+                and (
+                    source_calc_state := self.hass.states.get(
+                        self._sensor_calc_source_id
+                    )
+                )
                 and source_calc_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
             ):
                 try:
@@ -617,11 +779,15 @@ class UtilityMeterSensor(RestoreSensor):
                     else:
                         # If the tariff is not a single tariff or total, we use 0 as the calibration value
                         calibrate_value = Decimal(0)
-                    self._attr_calculated_current_value = round((
-                        Decimal(source_calc_state.state)
-                        * Decimal(self._attr_native_value)
-                        * Decimal(self._attr_multiplier)
-                    ) + calibrate_value,PRECISION)
+                    self._attr_calculated_current_value = round(
+                        (
+                            Decimal(source_calc_state.state)
+                            * Decimal(self._attr_native_value)
+                            * Decimal(self._attr_multiplier)
+                        )
+                        + calibrate_value,
+                        PRECISION,
+                    )
                 except (DecimalException, InvalidOperation) as err:
                     _LOGGER.error(
                         "Error while parsing value %s from sensor %s: %s",
@@ -707,7 +873,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._last_reset = dt_util.utcnow()
         self._last_period = (
             Decimal(self.native_value)  # noqa: PGH003 # type: ignore
-            if self.native_value else Decimal(0)
+            if self.native_value
+            else Decimal(0)
         )
         # update Calculated value if we have a calculation sensor
         if self._sensor_calc_source_id is not None:
@@ -745,9 +912,11 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_value = (None
-                    if last_sensor_data.native_value is None
-                    else Decimal(last_sensor_data.native_value))
+            self._attr_native_value = (
+                None
+                if last_sensor_data.native_value is None
+                else Decimal(last_sensor_data.native_value)
+            )
             self._input_device_class = last_sensor_data.input_device_class
             self._attr_native_unit_of_measurement = (
                 last_sensor_data.native_unit_of_measurement
@@ -849,23 +1018,30 @@ class UtilityMeterSensor(RestoreSensor):
         if self._cron_pattern is not None:
             state_attr[CONF_CRON_PATTERN] = self._cron_pattern
         if self._period is not None:
-            state_attr[CONF_METER_TYPE] = self._period
-        if (self._calibrate_value != 0
-            and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]
-            ):
+            state_attr[ATTR_PREDEFINED_CYCLE] = METER_NAME_TYPES[self._period]
+        if self._calibrate_value != 0 and str(self._tariff).lower() in [
+            SINGLE_TARIFF,
+            TOTAL_TARIFF,
+        ]:
             state_attr[CONF_CONFIG_CALIBRATE_VALUE] = str(self._calibrate_value)
         if self._sensor_source_id is not None:
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
         if self._sensor_calc_source_id is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._sensor_calc_source_id
-            state_attr[ATTR_CALC_CURRENT_VALUE] = (
-                str(round(self._attr_calculated_current_value,PRECISION)))
-            state_attr[ATTR_CALC_LAST_VALUE] = (
-                str(round(self._attr_calculated_last_value,PRECISION)))
+            state_attr[ATTR_CALC_CURRENT_VALUE] = str(
+                round(self._attr_calculated_current_value, PRECISION)
+            )
+            state_attr[ATTR_CALC_LAST_VALUE] = str(
+                round(self._attr_calculated_last_value, PRECISION)
+            )
             state_attr[CONF_SOURCE_CALC_MULTIPLIER] = str(self._attr_multiplier)
-            if (self._calibrate_calc_value != 0
-                and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]):
-                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
+            if self._calibrate_calc_value != 0 and str(self._tariff).lower() in [
+                SINGLE_TARIFF,
+                TOTAL_TARIFF,
+            ]:
+                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(
+                    self._calibrate_calc_value
+                )
         return state_attr
 
     @property
@@ -890,24 +1066,25 @@ class UtilityMeterSensor(RestoreSensor):
             restored_last_extra_data.as_dict()
         )
 
-
-#################################################################################################
 class UtilityMeterCalculatedSensor(RestoreSensor):
     """Representation of an Seperate Calculated sensor."""
 
     _attr_should_poll = False
     _attr_collecting_status = None
     _unrecorded_attributes = frozenset(
-        {ATTR_NEXT_RESET,
-         ATTR_SOURCE_ID,
-         CONF_CONFIG_CALIBRATE_CALC_VALUE,
-         CONF_CONFIG_CALIBRATE_VALUE,
-         CONF_CRON_PATTERN,
-         CONF_METER_TYPE,
-         CONF_SOURCE_CALC_MULTIPLIER,
-         CONF_SOURCE_CALC_SENSOR
+        {
+            ATTR_NEXT_RESET,
+            ATTR_SOURCE_ID,
+            CONF_CONFIG_CALIBRATE_CALC_VALUE,
+            CONF_CONFIG_CALIBRATE_VALUE,
+            CONF_CRON_PATTERN,
+            CONF_METER_TYPE,
+            CONF_SOURCE_CALC_MULTIPLIER,
+            CONF_SOURCE_CALC_SENSOR,
+            ATTR_LINKED_METER,
         }
-        )
+    )
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -926,17 +1103,20 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         tariff: str | None,
         unique_id: str | None,
         uom: str | None,
-        #value_template: Template | None,
+
     ) -> None:
         """Initialize the sensor."""
         self._attr_collecting_status = None
-        self._attr_device_class = (SensorDeviceClass.MONETARY
-                                   if device_class is None else device_class)
+        self._attr_device_class = (
+            SensorDeviceClass.MONETARY if device_class is None else device_class
+        )
         self._attr_device_info = device_info
         self._attr_icon = "mdi:currency-usd" if icon is None else icon
         self._attr_name = name
         self._attr_native_unit_of_measurement = CURRENCY_DOLLAR if uom is None else uom
-        self._attr_state_class = SensorStateClass.TOTAL if state_class is None else state_class
+        self._attr_state_class = (
+            SensorStateClass.TOTAL if state_class is None else state_class
+        )
         self._attr_unique_id = unique_id
         self._attribute = attribute
         self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
@@ -950,7 +1130,6 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
-        #self._attr_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -975,8 +1154,9 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
+
         state_attr = {
-            "linked_utility_meter": self._entity_id,
+            ATTR_LINKED_METER: self._entity_id,
             ATTR_STATUS: (
                 self._attr_collecting_status
                 if self._attr_collecting_status is not None
@@ -984,16 +1164,20 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
             ),
         }
         if self._period is not None:
-            state_attr[CONF_METER_TYPE] = self._period
+            state_attr[ATTR_PREDEFINED_CYCLE] = METER_NAME_TYPES[self._period]
         elif self._cron_pattern is not None:
             state_attr[CONF_CRON_PATTERN] = self._cron_pattern
         if self._sensor_source_id is not None:
             state_attr[ATTR_SOURCE_ID] = self._sensor_source_id
         if self._source_calc_entity is not None:
             state_attr[CONF_SOURCE_CALC_SENSOR] = self._source_calc_entity
-            if (self._calibrate_calc_value != 0
-                and str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]):
-                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(self._calibrate_calc_value)
+            if self._calibrate_calc_value != 0 and str(self._tariff).lower() in [
+                SINGLE_TARIFF,
+                TOTAL_TARIFF,
+            ]:
+                state_attr[CONF_CONFIG_CALIBRATE_CALC_VALUE] = str(
+                    self._calibrate_calc_value
+                )
         return state_attr
 
     @callback
@@ -1004,14 +1188,14 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         new_state = event.data["new_state"]
         _LOGGER.debug("Received new state: %s", new_state)
 
-        self._attr_available = True #new_state #!= STATE_UNAVAILABLE
+        self._attr_available = True
 
         self._attr_native_value = None
         if (
             new_state is None
             or new_state.state is None
             or new_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-            or hasattr(new_state, "attributes")  is False
+            or hasattr(new_state, "attributes") is False
         ):
             if not update_state:
                 _LOGGER.debug("Ignoring state update")
@@ -1039,9 +1223,9 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
                 return
 
         _LOGGER.debug("state update step 1")
-        _LOGGER.debug("state update step 1 %s",self._attribute)
-        _LOGGER.debug("state update step 1a %s",new_state.state)
-        _LOGGER.debug("state update step 1a %s",new_state.attributes)
+        _LOGGER.debug("state update step 1 %s", self._attribute)
+        _LOGGER.debug("state update step 1a %s", new_state.state)
+        _LOGGER.debug("state update step 1a %s", new_state.attributes)
 
         self._has_logged = False
         if self._attribute in new_state.attributes:

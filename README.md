@@ -27,14 +27,15 @@ This custom HACS integration for Home Assistant provides an enhanced set of capa
 
 Based on the current "Utility Meter" component code in the Home-Assistant/Core. Acknowledgements to [DGomes](https://github.com/dgomes) who is the Code Owner of the core utlity Meter who really did all the hard logic work for the Meter Utility.
 
-The main enhancements that the Utility Meter Next Gen has added to the original Utility Meter include:
+There are lots of enhancements that the Utility Meter Next Gen has added to the original Utility Meter include:
 
+- **Create multiple period sensors, optionally with Tariffs and individual Calculation sensors from a single Source and Calculation Sensor**
 - Creating Cron schedule patterns via the Frontend of HA, you no longer need to create them in configuration.yaml!
 - Additional Predefined schedules that should accomodate the majority of people's needs.
 - The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
 - Option to create an additional Sensor for the Calculated Value, if you have added a sensor to create a calculated value.
 - All settings of the Meter can be modified through the Frontend. The options reflect the schedule type you created the Meter with (Predefined or CRON).
-- An option to create a "Total" Tariff that will not pause like a normal Tariff does. (You can create a sungle Sensor set that collects for each tariff period plus the total)
+- An option to create a "Total" Tariff that will not pause like a normal Tariff does. (You can create a single Sensor set that collects for each tariff period plus the total)
 - Additional extra attributes have been added to the Sensor, so you can see quickly the key information about the sensor and what it is doing.
 - Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unnecessary recorder data bloat.
 - Calibration values can now be set and modified through the Utility Meter configuration.
@@ -43,13 +44,16 @@ These enhancements should provide a very versatile solution to simplify creating
 
 ## Installation
 
-Add this [repository](https://github.com/cabberley/utility_meter_evolved) via your custom Repositories option in the HACS dashboard as an "Integration Type" and then find "Utility Meter Next Gen" in the repository list, download and restart your Home Assistant.
+**The Utility Meter Next Gen is now available directly from HACS, no need to add the repository anymore!!**
 
-Or preferably easier use the link below to add it to your system:
+Go to the HACS Dashboard in your Home Assistant, and search for "Utility Meter Next Gen", download and restart your HA.
+
+OR
+
+1. Add this [repository](https://github.com/cabberley/utility_meter_evolved) via your custom Repositories option in the HACS dashboard as an "Integration Type" and then find "Utility Meter Next Gen" in the repository list, download and restart your Home Assistant.
+2. Use the link below to add it to your system:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cabberley&repository=utility_meter_evolved&category=integration)
-
-> **NOTE: Currently waiting for this new integration to be added to the HACS repository of Custom Integrations.**
 
 ## Using the Utility Meter Next Gen
 
@@ -57,11 +61,31 @@ After installing the integration, you should now find **Utility Meter Next Gen**
 
 Follow the instructions to setup your new Meter with an optional Caculation Sensor.
 
+## Using the Multi Predefined reset cycle Meters
+
+This great new feature will take the pain away from setting multiple individual Meters to track your usuage and $$. If you like to track your meters for various periods like every 5 minutes, 30 minutes, hourly, daily, monthly or yearly, this feature enables you to create a single config that will deliver:
+
+- Individual sensors for each time period.
+- Individual Tariff based sensors for each tariff for each time period.
+- Create a separate Calculation Sensor for every Meter created.
+- A single Select for the tariff selection that will pause/collect all the sensors in alignment with your Select choice.
+- After creation, you can go back and change (add/remove) Predefiend Reset Cycles and if you created a Tariff based set change the list of Tariffs. You can also add or remove the Calculation Sensor if you created a Utility Meter with a Calculation source.
+
+In addition to all of that, this special Multiple sensor config, always you to calibrate one of those periods. For example, those that are tracking their daily energy costs, may have a daily "service/connection" charge. With this Config, you can tell the setup to only apply the calibration calculation value to just the "Daily" meter.
+
+When you create a new Utlity Meter using the new "Multi Predefined reset cycle Meters", it is very similar to creating a normal predefined recycle Meter with a few additional options.
+
+1. After choosing your Source Sensors, you are then presented with the next step, select the various time periods you would like meters for. You can choose 1 or choose them all!
+2. After submitting the Predefined list you are then able to optional add some other more granular settings.
+3. The settings will be familiar to the normal Predefined Recycle Meter with the following changes:
+   1. For both the calibration sensors there is a new option to select which of the predefined cycles to apply it to.
+   2. For simplicity, the ability to set an Offset to the recycle times has been removed.
+
 ## Some Additional helpers
 
 ### Warning
 
-**Do not change the "Entity ID" after creating your meter, it will break the Sennors that this integration creates**
+**Do not change the "Entity ID" after creating your meter, it will break the Sensors that this integration creates**
 
 ### Selection of Sensors to Monitor
 
@@ -101,6 +125,3 @@ A good example of using the calibration sensor is if you are tracking the Cost o
 - if your Consumption is being recorded as MWh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 1000.
 - if your Consumption is being recorded as Wh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 0.0001.
 
-### If you want to track one of the attributes like "Last period calculated value" as a Sensor?
-
-If you want to track via another sensor the calculated attribute variable, I would suggest another Great HACS Custom Integration written by gjohansson-ST [Attribute as Sensor](https://github.com/gjohansson-ST/attribute_as_sensor) this integration can monitor an attribute in the Utility Meter Next Gen and surface it as a Sensor in its own right.

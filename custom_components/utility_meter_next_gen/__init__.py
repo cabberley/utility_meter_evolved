@@ -27,6 +27,8 @@ from homeassistant.helpers.helper_integration import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CONFIG_CALIBRATE_APPLY,
+    CONF_CONFIG_CALIBRATE_CALC_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CREATE_CALCULATION_SENSOR,
@@ -58,6 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 def validate_cron_pattern(pattern):
     """Check that the pattern is well-formed."""
     try:
+        _LOGGER.debug("Testing cron pattern: %s", pattern)
         CronSim(pattern, datetime(2020, 1, 1))  # any date will do
     except CronSimError as err:
         _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
@@ -85,7 +88,8 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(CONF_METER_TYPES),
-            vol.Optional(CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT): cv.ensure_list,
+            vol.Optional(CONF_METER_OFFSET,
+                default=CONF_METER_OFFSET_DURATION_DEFAULT): cv.ensure_list,
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,
@@ -291,22 +295,37 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
-    if config_entry.version == 3 or config_entry.version is None:
+    if config_entry.version == 3:
         new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
         new = {**config_entry.options, CONF_CONFIG_CALIBRATE_VALUE: 0}
         hass.config_entries.async_update_entry(config_entry, options=new, version=4)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
-    if config_entry.version == 4 or config_entry.version is None:
+    if config_entry.version == 4:
         new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
         hass.config_entries.async_update_entry(config_entry, options=new, version=5)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
-    if config_entry.version == 5 or config_entry.version is None:
-        new = {**config_entry.options, CONF_CREATE_CALCULATION_SENSOR: CONF_CREATE_CALCULATION_SENSOR_DEFAULT}
+    if config_entry.version == 5:
+        new = {**config_entry.options,
+               CONF_CREATE_CALCULATION_SENSOR: CONF_CREATE_CALCULATION_SENSOR_DEFAULT}
         hass.config_entries.async_update_entry(config_entry, options=new, version=6)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    if config_entry.version == 6:
+        new = {**config_entry.options,
+               CONF_CONFIG_CALIBRATE_CALC_APPLY: None}
+        hass.config_entries.async_update_entry(config_entry, options=new, version=7)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    if config_entry.version == 7:
+        new = {**config_entry.options,
+               CONF_CONFIG_CALIBRATE_APPLY: None}
+        hass.config_entries.async_update_entry(config_entry, options=new, version=8)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
