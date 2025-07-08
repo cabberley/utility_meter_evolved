@@ -113,7 +113,7 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_cron()
                 elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_PREDEFINED:  # noqa: RET505
                     return await self.async_step_predefined()
-                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_MULTI:  # noqa: RET505
+                elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_MULTI:
                     return await self.async_step_multi_step_1()
                 #return await self.async_step_repo()
 
@@ -258,8 +258,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Initialize the options flow handler."""
         self.options_schema =None
         self.config_type = None
-        #self.config_entry = config_entry
-        self.data = config_entry.options.copy()  # type: ignore
+        self.data = config_entry.options.copy()  #noqa: PGH003 # type: ignore
         _LOGGER.debug("async Option init self.data: %s", self.data)
         if config_entry.options["config_type"] == CONF_CONFIG_CRON:
             self.config_type = CONF_CONFIG_CRON

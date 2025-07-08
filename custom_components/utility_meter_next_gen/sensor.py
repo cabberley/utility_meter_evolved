@@ -301,7 +301,7 @@ async def async_setup_entry(
                             calc_sensor
                         )
 
-    else:
+    else: # noqa: PLR5501
         if not tariffs:
             # Add single sensor, not gated by a tariff selector
             meter_sensor = UtilityMeterSensor(

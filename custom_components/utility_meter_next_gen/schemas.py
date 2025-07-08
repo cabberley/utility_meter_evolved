@@ -585,7 +585,6 @@ def create_multi_option_schema_step_1(data):
     else:
         _LOGGER.debug("Schema Current Tariffs: %s", data[CONF_TARIFFS] )
         multi_option_step_tariffs = {}
-    #
 
     return vol.Schema(
         {**multi_option_step_1.schema,
