@@ -218,7 +218,7 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors
         )
     async def async_step_multi_step_2(self, user_input:
-            Optional[dict[str, Any]] = None):  # noqa: UP045
+            Optional[dict[str, Any]] = None):    # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         self.data = self.data or {}  # Initialize data if not set
@@ -232,9 +232,17 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 # Input is valid, set data.
-                if user_input[CONF_CONFIG_CALIBRATE_APPLY] == "none":
+                if (
+                    (CONF_CONFIG_CALIBRATE_APPLY in user_input
+                    and user_input[CONF_CONFIG_CALIBRATE_APPLY] == "none")
+                    or (CONF_CONFIG_CALIBRATE_APPLY not in user_input)
+                ):
                     user_input[CONF_CONFIG_CALIBRATE_APPLY] = None
-                if user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] == "none":
+                if (
+                    (CONF_CONFIG_CALIBRATE_CALC_APPLY in user_input
+                    and user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] == "none")
+                    or (CONF_CONFIG_CALIBRATE_CALC_APPLY not in user_input)
+                ):
                     user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] = None
                 self.data.update(user_input)  # noqa: PGH003 # type: ignore
                 return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
