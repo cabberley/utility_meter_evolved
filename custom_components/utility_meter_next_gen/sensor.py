@@ -147,10 +147,10 @@ async def async_setup_entry(
         )
     else:
         source_calc_entity_id = None
-    calibrate_calc_apply = config_entry.options[CONF_CONFIG_CALIBRATE_CALC_APPLY]
-    calibrate_calc_value = config_entry.options[CONF_CONFIG_CALIBRATE_CALC_VALUE]
-    calibrate_apply = config_entry.options[CONF_CONFIG_CALIBRATE_APPLY]
-    calibrate_value = config_entry.options[CONF_CONFIG_CALIBRATE_VALUE]
+    calibrate_calc_apply = config_entry.options.get(CONF_CONFIG_CALIBRATE_CALC_APPLY, None)
+    calibrate_calc_value = config_entry.options.get(CONF_CONFIG_CALIBRATE_CALC_VALUE, Decimal(0))
+    calibrate_apply = config_entry.options.get(CONF_CONFIG_CALIBRATE_APPLY, None)
+    calibrate_value = config_entry.options.get(CONF_CONFIG_CALIBRATE_VALUE, Decimal(0))
     create_calc_sensor = config_entry.options[CONF_CREATE_CALCULATION_SENSOR]
     cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]

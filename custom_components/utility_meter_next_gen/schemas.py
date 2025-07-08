@@ -336,7 +336,7 @@ def create_common_option_schema(data):
         ),
         vol.Optional(
             CONF_CONFIG_CALIBRATE_CALC_VALUE,
-            default=data[CONF_CONFIG_CALIBRATE_CALC_VALUE]): selector.NumberSelector(
+            default=data.get(CONF_CONFIG_CALIBRATE_CALC_VALUE,0)): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX,
                 step="any",
@@ -631,14 +631,15 @@ def create_multi_option_schema_step_2(data):
                 ),
             vol.Optional(
                 CONF_CONFIG_CALIBRATE_CALC_VALUE,
-                default=data[CONF_CONFIG_CALIBRATE_CALC_VALUE]): selector.NumberSelector(
+                default=data.get(CONF_CONFIG_CALIBRATE_CALC_VALUE,0)): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     mode=selector.NumberSelectorMode.BOX,
                     step="any",
                     ),
                 ),
             vol.Required(
-                CONF_CONFIG_CALIBRATE_CALC_APPLY, default=data[CONF_CONFIG_CALIBRATE_CALC_APPLY]):
+                CONF_CONFIG_CALIBRATE_CALC_APPLY,
+                    default=data.get(CONF_CONFIG_CALIBRATE_CALC_APPLY, [])):
                     selector.SelectSelector(
                     selector.SelectSelectorConfig(
                     options=data.get(CONF_METER_TYPE, []),
