@@ -773,19 +773,15 @@ class UtilityMeterSensor(RestoreSensor):
                 and source_calc_state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
             ):
                 try:
-                    if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
-                        # If the tariff is a single tariff or total, we use the calibration value
-                        calibrate_value = Decimal(self._calibrate_calc_value)
-                    else:
-                        # If the tariff is not a single tariff or total, we use 0 as the calibration value
-                        calibrate_value = Decimal(0)
-                    self._attr_calculated_current_value = round(
+                    self._attr_calculated_current_value += round(
                         (
                             Decimal(source_calc_state.state)
-                            * Decimal(self._attr_native_value)
+                            # Bug fix with Multi Meters we need to use
+                            # the adjustment and add not just recalc
+                            # Decimal(self._attr_native_value)
+                            * Decimal(adjustment)
                             * Decimal(self._attr_multiplier)
-                        )
-                        + calibrate_value,
+                        ),
                         PRECISION,
                     )
                 except (DecimalException, InvalidOperation) as err:
