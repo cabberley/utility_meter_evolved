@@ -518,6 +518,9 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     last_valid_state: Decimal | None
     status: str
     input_device_class: SensorDeviceClass | None
+    calculated_current_value: Decimal | None
+    calculated_last_value: Decimal | None
+
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
@@ -530,6 +533,8 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         )
         data["status"] = self.status
         data["input_device_class"] = str(self.input_device_class)
+        data["calculated_current_value"] = str(self.calculated_current_value)
+        data["calculated_last_value"] = str(self.calculated_last_value)
 
         return data
 
@@ -552,6 +557,17 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             input_device_class = try_parse_enum(
                 SensorDeviceClass, restored.get("input_device_class")
             )
+            calculated_current_value: Decimal | None = (
+                Decimal(restored["calculated_current_value"])
+                if restored.get("calculated_current_value")
+                else None
+            )
+            calculated_last_value: Decimal | None = (
+                Decimal(restored["calculated_last_value"])
+                if restored.get("calculated_last_value")
+                else None
+            )
+
         except (KeyError, InvalidOperation):
             # last_period is corrupted
             return None
@@ -564,6 +580,8 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             last_valid_state,
             status,
             input_device_class,
+            calculated_current_value,
+            calculated_last_value,
         )
 
 
@@ -599,8 +617,8 @@ class UtilityMeterSensor(RestoreSensor):
         source_entity,
         source_calc_entity,
         source_calc_multiplier,
-        calibrate_value,  # =Decimal(0),
-        calibrate_calc_value,  # =Decimal(0),
+        calibrate_value,
+        calibrate_calc_value,
         tariff_entity,
         tariff,
         unique_id,
@@ -622,8 +640,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_name = name
         self._input_device_class = None
         self._attr_native_unit_of_measurement = None
-        self._attr_calculated_current_value = 0
-        self._attr_calculated_last_value = 0
+        self._attr_calculated_current_value = Decimal(0)
+        self._attr_calculated_last_value = Decimal(0)
         self._attr_multiplier = source_calc_multiplier or Decimal(1)
         self._period = meter_type
         if meter_type is not None:
@@ -669,7 +687,6 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_calculated_current_value = Decimal(
             self._calibrate_calc_value
         )
-        self._attr_calculated_last_value = Decimal(0)
         self.async_write_ha_state()
 
     @staticmethod
@@ -726,7 +743,7 @@ class UtilityMeterSensor(RestoreSensor):
                 self.async_write_ha_state()
             return
 
-        self._attr_available = True
+        #self._attr_available = True
 
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
@@ -776,9 +793,6 @@ class UtilityMeterSensor(RestoreSensor):
                     self._attr_calculated_current_value += round(
                         (
                             Decimal(source_calc_state.state)
-                            # Bug fix with Multi Meters we need to use
-                            # the adjustment and add not just recalc
-                            # Decimal(self._attr_native_value)
                             * Decimal(adjustment)
                             * Decimal(self._attr_multiplier)
                         ),
@@ -876,7 +890,7 @@ class UtilityMeterSensor(RestoreSensor):
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
             if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
-                self._attr_calculated_current_value = self._calibrate_calc_value
+                self._attr_calculated_current_value = Decimal(self._calibrate_calc_value)
             else:
                 self._attr_calculated_current_value = Decimal(0)
         if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
@@ -923,6 +937,16 @@ class UtilityMeterSensor(RestoreSensor):
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
+            self._attr_calculated_current_value = (
+                Decimal(0)
+                if last_sensor_data.calculated_current_value is None
+                else Decimal(last_sensor_data.calculated_current_value)
+            )
+            self._attr_calculated_last_value = (
+                Decimal(0)
+                if last_sensor_data.calculated_last_value is None
+                else Decimal(last_sensor_data.calculated_last_value)
+            )
 
         @callback
         def async_source_tracking(event):
@@ -1051,6 +1075,8 @@ class UtilityMeterSensor(RestoreSensor):
             self._last_valid_state,
             PAUSED if self._collecting is None else COLLECTING,
             self._input_device_class,
+            self._attr_calculated_current_value,
+            self._attr_calculated_last_value,
         )
 
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
@@ -1110,6 +1136,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         self._attr_icon = "mdi:currency-usd" if icon is None else icon
         self._attr_name = name
         self._attr_native_unit_of_measurement = CURRENCY_DOLLAR if uom is None else uom
+        self._attr_suggested_display_precision = PRECISION
         self._attr_state_class = (
             SensorStateClass.TOTAL if state_class is None else state_class
         )
@@ -1184,8 +1211,6 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         new_state = event.data["new_state"]
         _LOGGER.debug("Received new state: %s", new_state)
 
-        self._attr_available = True
-
         self._attr_native_value = None
         if (
             new_state is None
@@ -1200,7 +1225,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
                     "State update for %s is None or unavailable, setting to STATE_UNAVAILABLE",
                     self._entity_id,
                 )
-                self._attr_native_value = Decimal(0)
+                #self._attr_native_value = STATE_UNAVAILABLE #Decimal(0)
                 self._attr_collecting_status = STATE_UNAVAILABLE
                 self.async_write_ha_state()
             return
