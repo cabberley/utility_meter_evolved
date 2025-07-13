@@ -171,7 +171,7 @@ async def async_setup_entry(
     calc_sensors = []
     tariffs = config_entry.options[CONF_TARIFFS]
 
-    if meter_type is not None and not isinstance(meter_type, str) and len(meter_type) > 1: # noqa: PLR5501
+    if meter_type is not None and not isinstance(meter_type, str) and len(meter_type) > 1:
         for meter in meter_type:
             if not tariffs:
                 # Add single sensor, not gated by a tariff selector
