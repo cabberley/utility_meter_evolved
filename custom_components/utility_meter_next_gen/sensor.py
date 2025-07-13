@@ -171,7 +171,7 @@ async def async_setup_entry(
     calc_sensors = []
     tariffs = config_entry.options[CONF_TARIFFS]
 
-    if meter_type is not None and not isinstance(meter_type, str) and len(meter_type) > 1:
+    if meter_type is not None and not isinstance(meter_type, str) and len(meter_type) > 1: # noqa: PLR5501
         for meter in meter_type:
             if not tariffs:
                 # Add single sensor, not gated by a tariff selector
@@ -743,8 +743,6 @@ class UtilityMeterSensor(RestoreSensor):
                 self.async_write_ha_state()
             return
 
-        #self._attr_available = True
-
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
         if new_state is None:
@@ -762,6 +760,9 @@ class UtilityMeterSensor(RestoreSensor):
             return
 
         if self.native_value is None:
+            _LOGGER.debug("selfHassDATA: %s",self.hass.data[DATA_UTILITY][self._parent_meter][
+                DATA_TARIFF_SENSORS
+            ])
             # First state update initializes the utility_meter sensors
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
@@ -778,6 +779,7 @@ class UtilityMeterSensor(RestoreSensor):
             adjustment := self.calculate_adjustment(old_state, new_state)
         ) is not None and (self._sensor_net_consumption or adjustment >= 0):
             # If net_consumption is off, the adjustment must be non-negative
+            _LOGGER.debug("%s: Adjustment Check:  %s : %s", self.name, adjustment, self._tariff)
             self._attr_native_value += Decimal(adjustment)  # type: ignore[operator]
 
             if (
@@ -822,7 +824,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._change_status(new_state.state)
 
     def _change_status(self, tariff: str) -> None:
-        if str(self._tariff).lower() in [tariff.lower(), TOTAL_TARIFF]:
+        if self._tariff == tariff:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -889,14 +891,8 @@ class UtilityMeterSensor(RestoreSensor):
         # update Calculated value if we have a calculation sensor
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
-            if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
-                self._attr_calculated_current_value = Decimal(self._calibrate_calc_value)
-            else:
-                self._attr_calculated_current_value = Decimal(0)
-        if str(self._tariff).lower() in [SINGLE_TARIFF, TOTAL_TARIFF]:
-            self._attr_native_value = Decimal(self._calibrate_value)
-        else:
-            self._attr_native_value = Decimal(0)
+        self._attr_calculated_current_value = Decimal(self._calibrate_calc_value)
+        self._attr_native_value = Decimal(self._calibrate_value)
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
@@ -951,7 +947,10 @@ class UtilityMeterSensor(RestoreSensor):
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
-            if self._tariff_entity is not None:
+            if str(self._tariff).lower() != TOTAL_TARIFF and self._tariff_entity is not None:
+                # If the tariff is not TOTAL_TARIFF, we need to track the tariff entity
+                # and change the status of the utility meter sensor accordingly
+                #if self._tariff_entity is not None:
                 _LOGGER.debug(
                     "<%s> tracks utility meter %s", self.name, self._tariff_entity
                 )
@@ -1246,7 +1245,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         _LOGGER.debug("state update step 1")
         _LOGGER.debug("state update step 1 %s", self._attribute)
         _LOGGER.debug("state update step 1a %s", new_state.state)
-        _LOGGER.debug("state update step 1a %s", new_state.attributes)
+        _LOGGER.debug("state update step 1b %s", new_state.attributes)
 
         self._has_logged = False
         if self._attribute in new_state.attributes:
