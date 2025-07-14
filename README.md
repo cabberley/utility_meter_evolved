@@ -10,7 +10,7 @@
 </h1>
 
 <p align="center">
-  <href="https://github.com/cabberley/utility_meter_evolved/releases"><img src="https://img.shields.io/github/v/release/cabberley/utility_meter_evolved?display_name=tag&include_prereleases&sort=semver" alt="Current version"> <img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/cabberley/utility_meter_evolved">
+  <a><href="https://github.com/cabberley/utility_meter_evolved/releases"><img src="https://img.shields.io/github/v/release/cabberley/utility_meter_evolved?display_name=tag&include_prereleases&sort=semver" alt="Current version"></a> <img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/cabberley/utility_meter_evolved">
   <img alt="GitHub" src="https://img.shields.io/github/license/cabberley/utility_meter_evolved"> <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/cabberley/utility_meter_evolved/validate.yml">
   <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/cabberley/utility_meter_evolved"> <img alt="GitHub User's stars" src="https://img.shields.io/github/stars/cabberley"> <img alt="GitHub Downloads (all assets, all releases)" src="https://img.shields.io/github/downloads/cabberley/utility_meter_evolved/total">
 
