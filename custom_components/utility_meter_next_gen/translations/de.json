@@ -1,0 +1,224 @@
+{
+    "title": "Utility Meter Next Gen",
+    "config": {
+        "error": {
+            "tariffs_not_unique": "Tarife müssen eindeutig sein",
+            "invalid_cron": "Das eingegebene Cron-Muster ist ungültig. Bitte überprüfen Sie die Syntax."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "config_type": "Konfigurationstyp",
+                    "name": "Neuer Sensorname",
+                    "source": "Eingangssensor für die Zählung (erforderlich)",
+                    "source_calc_sensor": "Eingangs-Berechnungssensor (optional, wenn Sie einen Preiszähler erstellen möchten)"
+                },
+                "data_description": {
+                    "config_type": "Wählen Sie den Typ des zu erstellenden Verbrauchszählers: vordefinierter Rücksetzzyklus, benutzerdefiniertes CRON-Muster oder eine Reihe vordefinierter Verbrauchszähler (erzeugt verschiedene Rücksetzzyklen aus einer Konfiguration).",
+                    "source_calc_sensor": "Wenn Sie einen Sensor verwenden möchten, um ein Preisattribut für den Zähler zu berechnen, wählen Sie ihn hier aus. Wenn nicht ausgewählt, meldet der Zähler nur den Quellwert."
+                },
+                "description": "Erstellen Sie einen Sensor, der den Verbrauch verschiedener Versorgungsleistungen (z.B. Energie, Gas, Wasser, Heizung) über einen konfigurierten Zeitraum verfolgt. Der Verbrauchszählersensor unterstützt optional die Aufteilung des Verbrauchs nach Tarifen. In diesem Fall wird ein Sensor für jeden Tarif erstellt, sowie eine Auswahleinheit zur Wahl des aktuellen Tarifs und optional die Berechnung der Kosten durch Kombination mit einem Preissensor.",
+                "title": "Einen Verbrauchszähler der nächsten Generation erstellen"
+            },
+            "predefined": {
+                "data": {
+                    "always_available": "Sensor immer verfügbar",
+                    "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
+                    "calibrate_value": "Kalibrierungswert für den Verbrauch (optional)",
+                    "create_calculation_sensor": "Einen separaten Berechnungssensor erstellen (optional)",
+                    "cycle": "Vordefinierter Rücksetzzyklus",
+                    "delta_values": "Delta-Werte",
+                    "net_consumption": "Nettoverbrauch",
+                    "offset": "Offset (optional, z.B. um einen Startwert für den Zähler festzulegen)",
+                    "periodically_resetting": "Periodisch zurücksetzend",
+                    "reset_cycle": "Rücksetzzyklus",
+                    "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "tariffs": "Tarife - fügen Sie einen 'total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
+                },
+                "description": "",
+                "title": "Zähler mit einem vordefinierten Zeitplan einrichten",
+                "data_description": {
+                    "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
+                    "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
+                    "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
+                    "create_calculation_sensor": "Zusätzlich zum Verbrauchssensor wird ein Berechnungssensor erstellt, der zur Berechnung eines Preisattributs für den Zähler verwendet werden kann. Wenn Sie dies nicht benötigen, können Sie es hier deaktivieren.",
+                    "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
+                    "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
+                    "offset": "Verschiebt den Tag/die Stunde/die Minute des Zähler-Resets (Sekunden werden derzeit ignoriert). Dies ist nützlich, wenn Sie den Zähler an einem bestimmten Tag des Monats starten möchten.",
+                    "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
+                    "reset_cycle": "Wählen Sie einen vordefinierten Rücksetzzyklus für den Zähler. Dies bestimmt, wie oft der Zähler seine Werte zurücksetzt.",
+                    "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
+                    "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'total'-Tarif hinzu."
+                }
+            },
+            "cron": {
+                "data": {
+                    "always_available": "Sensor immer verfügbar",
+                    "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
+                    "calibrate_value": "Kalibrierungswert für den Verbrauch (optional)",
+                    "create_calculation_sensor": "Einen separaten Berechnungssensor erstellen (optional)",
+                    "cron": "Ein Cron-Muster erstellen, z.B. 0/5 * * * *",
+                    "delta_values": "Delta-Werte",
+                    "net_consumption": "Nettoverbrauch",
+                    "periodically_resetting": "Periodisch zurücksetzend",
+                    "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "tariffs": "Tarife - fügen Sie einen 'total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
+                },
+                "description": "",
+                "title": "Zähler mit einem CRON-Muster einrichten",
+                "data_description": {
+                    "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
+                    "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
+                    "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
+                    "create_calculation_sensor": "Zusätzlich zum Verbrauchssensor wird ein Berechnungssensor erstellt, der zur Berechnung eines Preisattributs für den Zähler verwendet werden kann. Wenn Sie dies nicht benötigen, können Sie es hier deaktivieren.",
+                    "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
+                    "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
+                    "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
+                    "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
+                    "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'Total'-Tarif hinzu."
+                }
+            },
+            "multi_step_1": {
+                "data": {
+                    "cycle": "Vordefinierter Rücksetzzyklus"
+                },
+                "description": "Wählen Sie vordefinierte Rücksetzzyklen für den Verbrauchszähler.",
+                "data_description": {
+                    "cycle": "Wählen Sie einen oder mehrere vordefinierte Rücksetzzyklen für den Zähler."
+                }
+            },
+            "multi_step_2": {
+                "data": {
+                    "always_available": "Sensor immer verfügbar",
+                    "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
+                    "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
+                    "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
+                    "calibrate_value": "Kalibrierungswert für den Zähler (optional)",
+                    "create_calculation_sensor": "Einen separaten Berechnungssensor erstellen (optional)",
+                    "delta_values": "Delta-Werte",
+                    "net_consumption": "Nettoverbrauch",
+                    "periodically_resetting": "Periodisch zurücksetzend",
+                    "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "tariffs": "Tarife - fügen Sie einen 'total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
+                },
+                "description": "Konfigurieren Sie die Optionen des Verbrauchszählers.",
+                "data_description": {
+                    "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
+                    "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
+                    "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
+                    "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
+                    "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
+                    "create_calculation_sensor": "Zusätzlich zum Verbrauchssensor wird ein Berechnungssensor erstellt, der zur Berechnung eines Preisattributs für den Zähler verwendet werden kann. Wenn Sie dies nicht benötigen, können Sie es hier deaktivieren.",
+                    "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
+                    "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
+                    "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
+                    "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
+                    "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'total'-Tarif hinzu."
+                },
+                "title": "Optionen konfigurieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "always_available": "Sensor immer verfügbar",
+                    "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
+                    "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
+                    "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
+                    "calibrate_value": "Kalibrierungswert für den Zähler (optional)",
+                    "create_calculation_sensor": "Einen separaten Berechnungssensor erstellen (optional)",
+                    "cron": "Benutzerdefiniertes CRON-Muster",
+                    "cycle": "Vordefinierter Rücksetzzyklus",
+                    "delta_values": "Delta-Werte",
+                    "net_consumption": "Nettoverbrauch",
+                    "offset": "Offset (optional, z.B. um einen Startwert für den Zähler festzulegen)",
+                    "periodically_resetting": "Periodisch zurücksetzend",
+                    "remove_calc_sensor": "Eingangs-Berechnungssensor entfernen",
+                    "source": "Eingangssensor zur Verfolgung des Verbrauchs (erforderlich)",
+                    "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "source_calc_sensor": "Eingangs-Berechnungssensor (optional, wenn Sie einen Preiszähler erstellen möchten)",
+                    "tariffs": "Tarife - fügen Sie einen 'Total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
+                },
+                "data_description": {
+                    "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
+                    "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
+                    "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
+                    "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
+                    "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
+                    "create_calculation_sensor": "Zusätzlich zum Verbrauchssensor wird ein Berechnungssensor erstellt, der zur Berechnung eines Preisattributs für den Zähler verwendet werden kann. Wenn Sie dies nicht benötigen, können Sie es hier deaktivieren.",
+                    "cycle": "Wählen Sie einen vordefinierten Rücksetzzyklus für den Zähler. Dies bestimmt, wie oft der Zähler seine Werte zurücksetzt.",
+                    "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
+                    "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
+                    "offset": "Verschiebt den Tag/die Stunde/die Minute des Zähler-Resets (Sekunden werden derzeit ignoriert). Dies ist nützlich, wenn Sie den Zähler an einem bestimmten Tag des Monats starten möchten.",
+                    "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
+                    "remove_calc_sensor": "Wenn Sie keinen Berechnungssensor verwenden möchten, können Sie ihn hier entfernen. Dadurch werden die Attributwerte im Sensor nicht mehr angezeigt.",
+                    "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
+                    "source_calc_sensor": "Wenn Sie einen Sensor verwenden möchten, um ein Preisattribut für den Zähler zu berechnen, wählen Sie ihn hier aus. Wenn nicht ausgewählt, meldet der Zähler nur den Quellwert.",
+                    "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'Total'-Tarif hinzu."
+                }
+            },
+            "init_2": {
+                "data": {
+                    "config_calibrate_apply": "Kalibrierung anwenden",
+                    "config_calibrate_value": "Kalibrierungswert",
+                    "config_cron": "Benutzerdefiniertes CRON-Muster",
+                    "config_type": "Konfigurationstyp",
+                    "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)"
+                },
+                "data_description": {
+                    "config_calibrate_apply": "Wählen Sie den Sensor aus, auf den der Kalibrierungswert angewendet werden soll.",
+                    "config_calibrate_value": "Legen Sie den Wert fest, auf den der Zähler kalibriert werden soll.",
+                    "config_cron": "Geben Sie ein benutzerdefiniertes CRON-Muster für den Rücksetzzyklus ein.",
+                    "config_type": "Wählen Sie zwischen vordefinierten Zyklen oder benutzerdefinierten CRON-Mustern.",
+                    "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen."
+                },
+                "title": "Optionen konfigurieren"
+            }
+        }
+    },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Alle zwei Monate",
+                "daily": "Täglich",
+                "every-five-minutes": "Alle 5 Minuten",
+                "every-ten-minutes": "Alle 10 Minuten",
+                "every-twenty-minutes": "Alle 20 Minuten",
+                "half-hourly": "Halbstündlich",
+                "half-yearly": "Halbjährlich",
+                "hourly": "Stündlich",
+                "monthly": "Monatlich",
+                "none": "Kein Zyklus",
+                "quarter-hourly": "Viertelstündlich",
+                "quarterly": "Quartalsweise",
+                "weekly": "Wöchentlich",
+                "yearly": "Jährlich"
+            }
+        },
+        "config_type": {
+            "options": {
+            "cron": "Mit einem benutzerdefinierten CRON-Muster erstellen",
+            "predefined": "Mit einem vordefinierten Rücksetzzyklus erstellen",
+            "multi": "Mehrere vordefinierte Rücksetzzyklus-Zähler erstellen"
+            }
+        }
+    },
+    "services": {
+        "calibrate": {
+            "description": "Kalibriert einen Verbrauchszählersensor.",
+            "fields": {
+                "value": {
+                    "description": "Wert, auf den der Zähler gesetzt werden soll.",
+                    "name": "Wert"
+                }
+            },
+            "name": "Kalibrieren"
+        },
+        "reset": {
+            "description": "Setzt alle Zähler eines Verbrauchszählers zurück.",
+            "name": "Zurücksetzen"
+        }
+    }
+}
