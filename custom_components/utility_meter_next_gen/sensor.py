@@ -50,6 +50,10 @@ from homeassistant.helpers.event import (
     async_track_state_report_event,
 )
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.enum import try_parse_enum
+
 try:
     from homeassistant.helpers.template.extensions.type_cast import (
         TypeCastExtension,
@@ -58,9 +62,6 @@ try:
     is_number = TypeCastExtension.is_number
 except ImportError:
     from homeassistant.helpers.template import is_number
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util, slugify
-from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_CALC_CURRENT_VALUE,
