@@ -1140,7 +1140,19 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
             SensorDeviceClass.MONETARY if device_class is None else device_class
         )
         self._attr_device_info = device_info
-        self._attr_icon = "" if icon is None else icon
+        _currency_icons = {
+            "EUR": "mdi:currency-eur",
+            "GBP": "mdi:currency-gbp",
+            "USD": "mdi:currency-usd",
+            "JPY": "mdi:currency-jpy",
+            "CNY": "mdi:currency-cny",
+            "INR": "mdi:currency-inr",
+            "KRW": "mdi:currency-krw",
+            "RUB": "mdi:currency-rub",
+            "TRY": "mdi:currency-try",
+            "BRL": "mdi:currency-brl",
+        }
+        self._attr_icon = icon if icon is not None else _currency_icons.get(hass.config.currency, "")
         self._attr_name = name
         self._attr_native_unit_of_measurement = hass.config.currency if uom is None else uom
         self._attr_suggested_display_precision = PRECISION
