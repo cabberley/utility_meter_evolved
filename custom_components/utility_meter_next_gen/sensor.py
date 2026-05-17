@@ -1140,9 +1140,21 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
             SensorDeviceClass.MONETARY if device_class is None else device_class
         )
         self._attr_device_info = device_info
-        self._attr_icon = "mdi:currency-usd" if icon is None else icon
+        _currency_icons = {
+            "EUR": "mdi:currency-eur",
+            "GBP": "mdi:currency-gbp",
+            "USD": "mdi:currency-usd",
+            "JPY": "mdi:currency-jpy",
+            "CNY": "mdi:currency-cny",
+            "INR": "mdi:currency-inr",
+            "KRW": "mdi:currency-krw",
+            "RUB": "mdi:currency-rub",
+            "TRY": "mdi:currency-try",
+            "BRL": "mdi:currency-brl",
+        }
+        self._attr_icon = icon if icon is not None else _currency_icons.get(hass.config.currency, "")
         self._attr_name = name
-        self._attr_native_unit_of_measurement = CURRENCY_DOLLAR if uom is None else uom
+        self._attr_native_unit_of_measurement = hass.config.currency if uom is None else uom
         self._attr_suggested_display_precision = PRECISION
         self._attr_state_class = (
             SensorStateClass.TOTAL if state_class is None else state_class
@@ -1164,6 +1176,15 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
+        # Derive unit from calc sensor if not explicitly set
+        if self._source_calc_entity is not None:
+            calc_state = self.hass.states.get(self._source_calc_entity)
+            if calc_state is not None:
+                calc_uom = calc_state.attributes.get("unit_of_measurement", "")
+                # e.g. "€/kWh" → take the currency part before "/"
+                if "/" in calc_uom:
+                    self._attr_native_unit_of_measurement = calc_uom.split("/")[0]
+        
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_id, self._async_attribute_sensor_state_listener
