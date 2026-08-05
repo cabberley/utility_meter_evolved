@@ -27,6 +27,13 @@ This custom HACS integration for Home Assistant provides an enhanced set of capa
 
 Based on the current "Utility Meter" component code in the Home-Assistant/Core. Acknowledgements to [DGomes](https://github.com/dgomes) who is the Code Owner of the core utlity Meter who really did all the hard logic work for the Meter Utility.
 
+## Compatibility
+
+Release 2026.8.0 and newer require Home Assistant 2026.8.0 or later. Utility
+Meter Next Gen entities link directly to their source device while the source
+integration remains the device's sole owner, matching Home Assistant's current
+device registry model.
+
 There are lots of enhancements that the Utility Meter Next Gen has added to the original Utility Meter include:
 
 - **Create multiple period sensors, optionally with Tariffs and individual Calculation sensors from a single Source and Calculation Sensor**
@@ -124,4 +131,3 @@ A good example of using the calibration sensor is if you are tracking the Cost o
 
 - if your Consumption is being recorded as MWh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 1000.
 - if your Consumption is being recorded as Wh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 0.0001.
-

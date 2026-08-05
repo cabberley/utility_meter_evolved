@@ -16,13 +16,11 @@ from homeassistant.helpers import (
     discovery,
     entity_registry as er,
 )
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.helper_integration import (
-    async_handle_source_entity_changes,  # noqa: PGH003 # type: ignore
+    async_handle_source_entity_changes,
+    async_remove_helper_devices,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,6 +55,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def validate_cron_pattern(pattern):
     """Check that the pattern is well-formed."""
     try:
@@ -66,6 +65,7 @@ def validate_cron_pattern(pattern):
         _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
         raise vol.Invalid("Invalid pattern") from err
     return pattern
+
 
 def period_or_cron(config):
     """Check that if cron pattern is used, then meter type and offsite must be removed."""
@@ -81,6 +81,7 @@ def period_or_cron(config):
         )
     return config
 
+
 METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
         {
@@ -88,8 +89,9 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(CONF_METER_TYPES),
-            vol.Optional(CONF_METER_OFFSET,
-                default=CONF_METER_OFFSET_DURATION_DEFAULT): cv.ensure_list,
+            vol.Optional(
+                CONF_METER_OFFSET, default=CONF_METER_OFFSET_DURATION_DEFAULT
+            ): cv.ensure_list,
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,
@@ -190,13 +192,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
-
-    async_remove_stale_devices_links_keep_entity_device(
-        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
-    )
-
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {
         "source": entry.options[CONF_SOURCE_SENSOR],
@@ -219,10 +217,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_SOURCE_SENSOR: source_entity_id},
         )
 
-    async def source_entity_removed() -> None:
-        # The source entity has been removed, we need to clean the device links.
-        async_remove_stale_devices_links_keep_entity_device(hass, entry.entry_id, None)
-
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
@@ -232,7 +226,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass, entry.options[CONF_SOURCE_SENSOR]
             ),
             source_entity_id_or_uuid=entry.options[CONF_SOURCE_SENSOR],
-            source_entity_removed=source_entity_removed,
         )
     )
 
@@ -243,9 +236,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
-            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+            Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
-        #entry.options[CONF_TARIFFS].append("total")
         hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
             entity_entry.entity_id
         )
@@ -280,53 +272,61 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    """Migrate an entry to the current data and device model."""
+    version = config_entry.version or 2
+    options = dict(config_entry.options)
+    _LOGGER.debug(
+        "Migrating config entry from version %s.%s",
+        version,
+        config_entry.minor_version,
+    )
 
-    if config_entry.version == 1:
-        new = {**config_entry.options,CONF_METER_PERIODICALLY_RESETTING: True}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
+    if version == 1:
+        options[CONF_METER_PERIODICALLY_RESETTING] = True
+        version = 2
+    if version == 2:
+        options[CONF_SOURCE_CALC_MULTIPLIER] = 1
+        version = 3
+    if version == 3:
+        options[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
+        options[CONF_CONFIG_CALIBRATE_VALUE] = 0
+        version = 4
+    if version == 4:
+        options[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
+        version = 5
+    if version == 5:
+        options[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+        version = 6
+    if version == 6:
+        options[CONF_CONFIG_CALIBRATE_CALC_APPLY] = None
+        version = 7
+    if version == 7:
+        options[CONF_CONFIG_CALIBRATE_APPLY] = None
+        version = 8
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    if version != 8:
+        _LOGGER.error(
+            "Unsupported config entry version %s.%s",
+            version,
+            config_entry.minor_version,
+        )
+        return False
 
-    if config_entry.version == 2 or config_entry.version is None:
-        new = {**config_entry.options, CONF_SOURCE_CALC_MULTIPLIER: 1}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=3)
+    if config_entry.minor_version < 2:
+        async_remove_helper_devices(
+            hass,
+            helper_config_entry_id=config_entry.entry_id,
+            source_device_id=async_entity_id_to_device_id(
+                hass, options[CONF_SOURCE_SENSOR]
+            ),
+            remove_all_devices=True,
+        )
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    if config_entry.version == 3:
-        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
-        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_VALUE: 0}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=4)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    if config_entry.version == 4:
-        new = {**config_entry.options, CONF_CONFIG_CALIBRATE_CALC_VALUE: 0}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=5)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    if config_entry.version == 5:
-        new = {**config_entry.options,
-               CONF_CREATE_CALCULATION_SENSOR: CONF_CREATE_CALCULATION_SENSOR_DEFAULT}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=6)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    if config_entry.version == 6:
-        new = {**config_entry.options,
-               CONF_CONFIG_CALIBRATE_CALC_APPLY: None}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=7)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    if config_entry.version == 7:
-        new = {**config_entry.options,
-               CONF_CONFIG_CALIBRATE_APPLY: None}
-        hass.config_entries.async_update_entry(config_entry, options=new, version=8)
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options=options,
+        version=8,
+        minor_version=2,
+    )
+    _LOGGER.debug("Migration to version 8.2 successful")
     return True

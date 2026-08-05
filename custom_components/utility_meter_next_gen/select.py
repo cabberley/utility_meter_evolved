@@ -9,8 +9,8 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -31,7 +31,7 @@ async def async_setup_entry(
 
     unique_id = config_entry.entry_id
 
-    device_info = async_device_info_to_link_from_entity(
+    device = async_entity_id_to_device(
         hass,
         config_entry.options[CONF_SOURCE_SENSOR],
     )
@@ -40,7 +40,7 @@ async def async_setup_entry(
         name=name,
         tariffs=tariffs,
         unique_id=unique_id,
-        device_info=device_info,
+        device=device,
     )
     async_add_entities([tariff_select])
 
@@ -89,14 +89,14 @@ class TariffSelect(SelectEntity, RestoreEntity):
         *,
         yaml_slug: str | None = None,
         unique_id: str | None = None,
-        device_info: DeviceInfo | None = None,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize a tariff selector."""
         self._attr_name = name
         if yaml_slug:  # Backwards compatibility with YAML configuration entries
             self.entity_id = f"select.{yaml_slug}"
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = device
         self._current_tariff: str | None = None
         self._tariffs = tariffs
         self._attr_should_poll = False
@@ -105,12 +105,12 @@ class TariffSelect(SelectEntity, RestoreEntity):
     def options(self) -> list[str]:
         """Return the available tariffs."""
         tariff_options = list(self._tariffs)
-        #if "total" in tariff_options:
+        # if "total" in tariff_options:
         if any(t.lower() == "total" for t in tariff_options):
-            _LOGGER.debug(
-                "removing 'total' from select entity. "
-            )
-            tariff_options = [t for t in tariff_options if not re.fullmatch("total", t, re.IGNORECASE)]
+            _LOGGER.debug("removing 'total' from select entity. ")
+            tariff_options = [
+                t for t in tariff_options if not re.fullmatch("total", t, re.IGNORECASE)
+            ]
         return tariff_options
 
     @property
