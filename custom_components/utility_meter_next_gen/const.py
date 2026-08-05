@@ -106,7 +106,7 @@ CONF_CRON_PATTERN = "cron"
 CONF_METER = "meter"
 CONF_METER_TYPE = "cycle"
 CONF_METER_OFFSET = "offset"
-CONF_METER_OFFSET_DURATION_DEFAULT = {"days":0, "hours":0, "minutes":0, "seconds":0}
+CONF_METER_OFFSET_DURATION_DEFAULT = {"days": 0, "hours": 0, "minutes": 0, "seconds": 0}
 CONF_METER_DELTA_VALUES = "delta_values"
 CONF_METER_NET_CONSUMPTION = "net_consumption"
 CONF_METER_PERIODICALLY_RESETTING = "periodically_resetting"
@@ -140,7 +140,7 @@ CONF_METER_TYPES = [
     YEARLY,
 ]
 
-#Entity related constants
+# Entity related constants
 ATTR_CALC_CURRENT_VALUE = "current_period_calculated_value"
 ATTR_CALC_LAST_VALUE = "last_period_calculated_value"
 ATTR_CRON_PATTERN = "cron pattern"
@@ -159,7 +159,7 @@ ATTR_VALUE = "value"
 SIGNAL_START_PAUSE_METER = "utility_meter_next_gen_start_pause"
 SIGNAL_RESET_METER = "utility_meter_next_gen_reset"
 
-#Action related constants
+# Action related constants
 SERVICE_RESET = "reset"
 SERVICE_CALIBRATE_METER = "calibrate"
 
@@ -175,7 +175,7 @@ DEVICE_CLASSES_METER = [
     "volume",
     "volume_storage",
     "water",
-    "weight"
+    "weight",
 ]
 
 PERIOD2CRON = {

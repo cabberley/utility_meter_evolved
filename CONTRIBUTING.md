@@ -15,9 +15,10 @@ Pull requests are the best way to propose changes to the codebase.
 
 1. Fork the repo and create your branch from `main`.
 2. If you've changed something, update the documentation.
-3. Make sure your code lints (using `scripts/lint`).
-4. Test you contribution.
-5. Issue that pull request!
+3. Make sure your code lints with `python -m ruff check .`.
+4. Format the code with `python -m ruff format .`.
+5. Test your contribution with `python -m pytest`.
+6. Issue that pull request!
 
 ## Any contributions you make will be under the MIT Software License
 
@@ -44,7 +45,7 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Use [black](https://github.com/ambv/black) to make sure the code follows the style.
+Use [Ruff](https://docs.astral.sh/ruff/) to format and lint Python code.
 
 ## Test your code modification
 
@@ -55,6 +56,14 @@ if you use Visual Studio Code. With this container you will have a stand alone
 Home Assistant instance running and already configured with the included
 [`configuration.yaml`](./config/configuration.yaml)
 file.
+
+The device-management tests require the Home Assistant custom component pytest
+plugin:
+
+```shell
+python -m pip install pytest-homeassistant-custom-component
+python -m pytest tests/components/utility_meter_evolved/test_device_management.py
+```
 
 ## License
 
