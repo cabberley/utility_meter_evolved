@@ -95,6 +95,7 @@ from .const import (
     CONF_TARIFFS,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    DOMAIN,
     METER_NAME_TYPES,
     PAUSED,
     PERIOD2CRON,
@@ -234,9 +235,7 @@ async def async_setup_entry(
                         cron_pattern=cron_pattern,
                         device_class=None,
                         device=device,
-                        entity_id=(
-                            f"sensor.{clean_string(name)}_{clean_string(METER_NAME_TYPES[meter])}"
-                        ),
+                        meter_unique_id=meter_sensor.unique_id,
                         hass=hass,
                         icon=None,
                         meter_type=meter,
@@ -298,9 +297,7 @@ async def async_setup_entry(
                             cron_pattern=cron_pattern,
                             device_class=None,
                             device=device,
-                            entity_id=(
-                                f"sensor.{clean_string(name)}_{clean_string(METER_NAME_TYPES[meter])}_{clean_string(tariff)}"
-                            ),
+                            meter_unique_id=meter_sensor.unique_id,
                             hass=hass,
                             icon=None,
                             meter_type=meter,
@@ -351,7 +348,7 @@ async def async_setup_entry(
                     cron_pattern=cron_pattern,
                     device_class=None,
                     device=device,
-                    entity_id=f"sensor.{clean_string(name)}",
+                    meter_unique_id=meter_sensor.unique_id,
                     hass=hass,
                     icon=None,
                     meter_type=meter_type,
@@ -403,7 +400,7 @@ async def async_setup_entry(
                         cron_pattern=cron_pattern,
                         device_class=None,  # device_class,
                         device=device,
-                        entity_id=f"sensor.{clean_string(name)}_{clean_string(tariff)}",
+                        meter_unique_id=meter_sensor.unique_id,
                         hass=hass,
                         icon=None,
                         meter_type=meter_type,
@@ -420,10 +417,10 @@ async def async_setup_entry(
                         calc_sensor
                     )
 
-    async_add_entities(meters)
-    async_add_entities(calc_sensors)
-
     platform = entity_platform.async_get_current_platform()
+    # Register meters before resolving their entity IDs in calculated sensors.
+    await platform.async_add_entities(meters)
+    async_add_entities(calc_sensors)
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
@@ -1132,7 +1129,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         cron_pattern: str | None,
         device_class: SensorDeviceClass | None,
         device: DeviceEntry | None,
-        entity_id: str,
+        meter_unique_id: str,
         icon: str | None,
         meter_type: str | None,
         name: str,
@@ -1176,7 +1173,8 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         self._attribute = attribute
         self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
         self._cron_pattern = cron_pattern
-        self._entity_id = entity_id
+        self._meter_unique_id = meter_unique_id
+        self._entity_id: str | None = None
         self._has_logged = False
         self._period = meter_type
         self._sensor_source_id = source_entity
@@ -1189,6 +1187,12 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
+        self._entity_id = er.async_get(self.hass).async_get_entity_id(
+            "sensor", DOMAIN, self._meter_unique_id
+        )
+        if self._entity_id is None:
+            return
+
         # Derive unit from calc sensor if not explicitly set
         if self._source_calc_entity is not None:
             calc_state = self.hass.states.get(self._source_calc_entity)

@@ -1,12 +1,14 @@
 """Tests for Utility Meter Next Gen device management."""
 
 from collections.abc import Iterable
+from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -16,6 +18,8 @@ from custom_components.utility_meter_next_gen.config_flow import (
     UtilityMeterEvolvedCustomConfigFlow,
 )
 from custom_components.utility_meter_next_gen.const import (
+    ATTR_CALC_CURRENT_VALUE,
+    ATTR_LINKED_METER,
     CONF_CONFIG_CALIBRATE_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
@@ -34,7 +38,9 @@ from custom_components.utility_meter_next_gen.const import (
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
+    DAILY,
     DOMAIN,
+    METER_NAME_TYPES,
     MONTHLY,
 )
 
@@ -133,6 +139,106 @@ async def test_entities_link_without_owning_source_device(
     assert (
         dr.async_entries_for_config_entry(device_registry, helper_entry.entry_id) == []
     )
+
+
+@pytest.mark.parametrize("meter_type", [MONTHLY, [DAILY, MONTHLY]])
+@pytest.mark.parametrize("tariffs", [[], ["peak", "offpeak"]])
+@pytest.mark.parametrize("assigned_id", ["default", "prefixed", "collision"])
+async def test_calculated_sensors_link_to_registered_meters(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    meter_type: str | list[str],
+    tariffs: list[str],
+    assigned_id: str,
+) -> None:
+    """Calculated sensors follow actual meter IDs, not IDs guessed from names."""
+    _, _, source_entity = _add_source(hass, device_registry, entity_registry, "source")
+    options = _options(source_entity.entity_id, tariffs)
+    options[CONF_METER_TYPE] = meter_type
+    options[CONF_CREATE_CALCULATION_SENSOR] = True
+    options[CONF_SOURCE_CALC_SENSOR] = "sensor.price"
+    helper_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options=options,
+        title="Ovens Consumption",
+        version=UtilityMeterEvolvedCustomConfigFlow.VERSION,
+        minor_version=UtilityMeterEvolvedCustomConfigFlow.MINOR_VERSION,
+    )
+    helper_entry.add_to_hass(hass)
+
+    meter_names = {}
+    for cycle in meter_type if isinstance(meter_type, list) else [None]:
+        for tariff in tariffs or [None]:
+            suffix = "_".join(
+                part for part in (METER_NAME_TYPES.get(cycle), tariff) if part
+            )
+            unique_id = helper_entry.entry_id + (f"_{suffix}" if suffix else "")
+            name = helper_entry.title + (
+                f" {suffix.replace('_', ' ')}" if suffix else ""
+            )
+            meter_names[unique_id] = name
+            object_id = name.lower().replace(" ", "_")
+            if assigned_id == "prefixed":
+                entity_registry.async_get_or_create(
+                    "sensor",
+                    DOMAIN,
+                    unique_id,
+                    config_entry=helper_entry,
+                    suggested_object_id=f"kitchen_ovens_ct_{object_id}",
+                )
+            elif assigned_id == "collision":
+                hass.states.async_set(
+                    f"sensor.{object_id}",
+                    "100",
+                    {ATTR_CALC_CURRENT_VALUE: "999"},
+                )
+
+    attributes = {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+    hass.states.async_set(source_entity.entity_id, "10", attributes)
+    hass.states.async_set("sensor.price", "2")
+    await hass.async_start()
+    assert await hass.config_entries.async_setup(helper_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for reading in ("11", "13"):
+        hass.states.async_set(source_entity.entity_id, reading, attributes)
+        await hass.async_block_till_done()
+
+    for index, (unique_id, name) in enumerate(meter_names.items()):
+        meter_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        calculated_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{name} Calculated"
+        )
+        meter_state = hass.states.get(meter_id)
+        calculated_state = hass.states.get(calculated_id)
+        assert calculated_state.attributes[ATTR_LINKED_METER] == meter_id
+        assert Decimal(calculated_state.state) == Decimal(
+            meter_state.attributes[ATTR_CALC_CURRENT_VALUE]
+        )
+        assert Decimal(calculated_state.state) == (0 if name.endswith("offpeak") else 6)
+
+        # Attribute-only changes must also reach the correct calculated sensor.
+        hass.states.async_set(
+            meter_id,
+            meter_state.state,
+            {**meter_state.attributes, ATTR_CALC_CURRENT_VALUE: str(index + 7)},
+        )
+        await hass.async_block_till_done()
+        assert Decimal(hass.states.get(calculated_id).state) == index + 7
+
+    assert await hass.config_entries.async_reload(helper_entry.entry_id)
+    await hass.async_block_till_done()
+    for unique_id, name in meter_names.items():
+        meter_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        calculated_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{name} Calculated"
+        )
+        calculated_state = hass.states.get(calculated_id)
+        assert calculated_state.attributes[ATTR_LINKED_METER] == meter_id
+        assert Decimal(calculated_state.state) == Decimal(
+            hass.states.get(meter_id).attributes[ATTR_CALC_CURRENT_VALUE]
+        )
 
 
 async def test_source_option_change_relinks_entities(
