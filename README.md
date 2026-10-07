@@ -29,7 +29,7 @@ Based on the current "Utility Meter" component code in the Home-Assistant/Core. 
 
 ## Compatibility
 
-Release 2026.8.0 and newer require Home Assistant 2026.8.0 or later. Utility
+Releases 2026.8.0 and newer require Home Assistant 2026.8.0 or later. Utility
 Meter Next Gen entities link directly to their source device while the source
 integration remains the device's sole owner, matching Home Assistant's current
 device registry model.
