@@ -22,6 +22,8 @@
             },
             "predefined": {
                 "data": {
+                    "calibrate_calc_sensor": "Calibration Sensor for Calculation (Optional)",
+                    "calibrate_sensor": "Calibration Sensor for Consumption (Optional)",
                     "always_available": "Sensor always available",
                     "calibrate_calc_value": "Calibration Value for Calculation (Optional)",
                     "calibrate_value": "Calibration Value for Consumption (Optional)",
@@ -38,6 +40,8 @@
                 "description": "",
                 "title": "Setup the Meter using a Predefined Schedule",
                 "data_description": {
+                    "calibrate_calc_sensor": "Use this sensor or numeric helper instead of the fixed calculation calibration value. Read at initialization and each reset; invalid or unavailable readings use zero. Use the same currency units as the cost sensor.",
+                    "calibrate_sensor": "Use this sensor or numeric helper instead of the fixed consumption calibration value. Read at initialization and each reset; invalid or unavailable readings use zero.",
                     "always_available": "If activated, the sensor will always show the last known value, even if the source entity is unavailable or unknown.",
                     "calibrate_calc_value": "When the reset cycle is reached, the calculation sensor will be set to this value. This is useful if you want to start the meter Calc to a specific value.",
                     "calibrate_value": "When the reset cycle is reached, the consumption sensor will be set to this value. This is useful if you want to start the meter on a specific value.",
@@ -53,6 +57,8 @@
             },
             "cron": {
                 "data": {
+                    "calibrate_calc_sensor": "Calibration Sensor for Calculation (Optional)",
+                    "calibrate_sensor": "Calibration Sensor for Consumption (Optional)",
                     "always_available": "Sensor always available",
                     "calibrate_calc_value": "Calibration Value for Calculation (Optional)",
                     "calibrate_value": "Calibration Value for Consumption (Optional)",
@@ -67,6 +73,8 @@
                 "description": "",
                 "title": "Setup the Meter using a CRON pattern",
                 "data_description": {
+                    "calibrate_calc_sensor": "Use this sensor or numeric helper instead of the fixed calculation calibration value. Read at initialization and each reset; invalid or unavailable readings use zero. Use the same currency units as the cost sensor.",
+                    "calibrate_sensor": "Use this sensor or numeric helper instead of the fixed consumption calibration value. Read at initialization and each reset; invalid or unavailable readings use zero.",
                     "always_available": "If activated, the sensor will always show the last known value, even if the source entity is unavailable or unknown.",
                     "calibrate_calc_value": "When the reset cycle is reached, the calculation sensor will be set to this value. This is useful if you want to start the meter Calc to a specific value.",
                     "calibrate_value": "When the reset cycle is reached, the consumption sensor will be set to this value. This is useful if you want to start the meter on a specific value.",
@@ -89,6 +97,8 @@
             },
             "multi_step_2": {
                 "data": {
+                    "calibrate_calc_sensor": "Calibration Sensor for Calculation (Optional)",
+                    "calibrate_sensor": "Calibration Sensor for Consumption (Optional)",
                     "always_available": "Sensor always available",
                     "calibrate_apply": "Apply Calibration to which Predefined Cycle? (Optional)",
                     "calibrate_calc_apply": "Apply Calculation Calibration to which Predefined Cycle? (Optional)",
@@ -103,6 +113,8 @@
                 },
                 "description": "Configure the Utility Meter options.",
                 "data_description": {
+                    "calibrate_calc_sensor": "Use this sensor or numeric helper instead of the fixed calculation calibration value for the selected cycle. Read at initialization and each reset; invalid or unavailable readings use zero. Use the same currency units as the cost sensor.",
+                    "calibrate_sensor": "Use this sensor or numeric helper instead of the fixed consumption calibration value for the selected cycle. Read at initialization and each reset; invalid or unavailable readings use zero.",
                     "always_available": "If activated, the sensor will always show the last known value, even if the source entity is unavailable or unknown.",
                     "calibrate_apply": "Apply Calibration to which Predefined Cycle? (If your Calibration is not needed and is set to 0, just leave this to the defaul displayed Cycle)",
                     "calibrate_calc_apply": "Apply Calculation Calibration to which Predefined Cycle? (If your Calibration is not needed and is set to 0, just leave this to the defaul displayed Cycle)",
@@ -124,6 +136,8 @@
         "step": {
             "init": {
                 "data": {
+                    "calibrate_calc_sensor": "Calibration Sensor for Calculation (Optional)",
+                    "calibrate_sensor": "Calibration Sensor for Consumption (Optional)",
                     "always_available": "Sensor always available",
                     "calibrate_apply": "Apply Calibration to which Predefined Cycle? (Optional)",
                     "calibrate_calc_apply": "Apply Calculation Calibration to which Predefined Cycle? (Optional)",
@@ -143,6 +157,8 @@
                     "tariffs": "Tariffs - add a 'Total' tariff to track total consumption"
                 },
                 "data_description": {
+                    "calibrate_calc_sensor": "Use this sensor or numeric helper instead of the fixed calculation calibration value. Read at initialization and each reset; invalid or unavailable readings use zero. Use the same currency units as the cost sensor. Clear this selection to use a fixed value again.",
+                    "calibrate_sensor": "Use this sensor or numeric helper instead of the fixed consumption calibration value. Read at initialization and each reset; invalid or unavailable readings use zero. Clear this selection to use a fixed value again.",
                     "always_available": "If activated, the sensor will always show the last known value, even if the source entity is unavailable or unknown.",
                     "calibrate_apply": "Apply Calibration to which Predefined Cycle? (If your Calibration is not needed and is set to 0, just leave this to the defaul displayed Cycle)",
                     "calibrate_calc_apply": "Apply Calculation Calibration to which Predefined Cycle? (If your Calibration is not needed and is set to 0, just leave this to the defaul displayed Cycle)",

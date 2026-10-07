@@ -22,6 +22,8 @@
             },
             "predefined": {
                 "data": {
+                    "calibrate_calc_sensor": "Kalibrierungssensor für die Berechnung (optional)",
+                    "calibrate_sensor": "Kalibrierungssensor für den Verbrauch (optional)",
                     "always_available": "Sensor immer verfügbar",
                     "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
                     "calibrate_value": "Kalibrierungswert für den Verbrauch (optional)",
@@ -38,6 +40,8 @@
                 "description": "",
                 "title": "Zähler mit einem vordefinierten Zeitplan einrichten",
                 "data_description": {
+                    "calibrate_calc_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Berechnungskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null. Verwenden Sie dieselbe Währungseinheit wie beim Kostensensor.",
+                    "calibrate_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Verbrauchskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null.",
                     "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
                     "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
                     "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
@@ -53,6 +57,8 @@
             },
             "cron": {
                 "data": {
+                    "calibrate_calc_sensor": "Kalibrierungssensor für die Berechnung (optional)",
+                    "calibrate_sensor": "Kalibrierungssensor für den Verbrauch (optional)",
                     "always_available": "Sensor immer verfügbar",
                     "calibrate_calc_value": "Kalibrierungswert für die Berechnung (optional)",
                     "calibrate_value": "Kalibrierungswert für den Verbrauch (optional)",
@@ -67,6 +73,8 @@
                 "description": "",
                 "title": "Zähler mit einem CRON-Muster einrichten",
                 "data_description": {
+                    "calibrate_calc_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Berechnungskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null. Verwenden Sie dieselbe Währungseinheit wie beim Kostensensor.",
+                    "calibrate_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Verbrauchskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null.",
                     "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
                     "calibrate_calc_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Berechnungssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie die Zählerberechnung mit einem bestimmten Wert starten möchten.",
                     "calibrate_value": "Wenn der Rücksetzzyklus erreicht ist, wird der Verbrauchssensor auf diesen Wert gesetzt. Dies ist nützlich, wenn Sie den Zähler mit einem bestimmten Wert starten möchten.",
@@ -89,6 +97,8 @@
             },
             "multi_step_2": {
                 "data": {
+                    "calibrate_calc_sensor": "Kalibrierungssensor für die Berechnung (optional)",
+                    "calibrate_sensor": "Kalibrierungssensor für den Verbrauch (optional)",
                     "always_available": "Sensor immer verfügbar",
                     "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
                     "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
@@ -103,6 +113,8 @@
                 },
                 "description": "Konfigurieren Sie die Optionen des Verbrauchszählers.",
                 "data_description": {
+                    "calibrate_calc_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Berechnungskalibrierungswerts für den gewählten Zyklus. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null. Verwenden Sie dieselbe Währungseinheit wie beim Kostensensor.",
+                    "calibrate_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Verbrauchskalibrierungswerts für den gewählten Zyklus. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null.",
                     "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
                     "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
                     "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
@@ -123,6 +135,8 @@
         "step": {
             "init": {
                 "data": {
+                    "calibrate_calc_sensor": "Kalibrierungssensor für die Berechnung (optional)",
+                    "calibrate_sensor": "Kalibrierungssensor für den Verbrauch (optional)",
                     "always_available": "Sensor immer verfügbar",
                     "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
                     "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Optional)",
@@ -142,6 +156,8 @@
                     "tariffs": "Tarife - fügen Sie einen 'Total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
                 },
                 "data_description": {
+                    "calibrate_calc_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Berechnungskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null. Verwenden Sie dieselbe Währungseinheit wie beim Kostensensor. Leeren Sie die Auswahl, um wieder einen festen Wert zu verwenden.",
+                    "calibrate_sensor": "Verwendet diesen Sensor oder Zahlenhelfer statt des festen Verbrauchskalibrierungswerts. Wird bei der Initialisierung und jedem Zurücksetzen gelesen; ungültige oder nicht verfügbare Werte ergeben null. Leeren Sie die Auswahl, um wieder einen festen Wert zu verwenden.",
                     "always_available": "Wenn aktiviert, zeigt der Sensor immer den letzten bekannten Wert an, auch wenn die Quellentität nicht verfügbar oder unbekannt ist.",
                     "calibrate_apply": "Kalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
                     "calibrate_calc_apply": "Berechnungskalibrierung auf welchen vordefinierten Zyklus anwenden? (Wenn Ihre Kalibrierung nicht benötigt wird und auf 0 gesetzt ist, lassen Sie dies einfach auf dem standardmäßig angezeigten Zyklus)",
