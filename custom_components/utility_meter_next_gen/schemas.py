@@ -4,6 +4,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
@@ -47,7 +48,7 @@ BASE_CONFIG_SCHEMA = vol.Schema(
             ),
         ),
         vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]),
         ),
         vol.Required(
             CONF_CONFIG_TYPE, default=[CONF_CONFIG_PREDEFINED]
@@ -400,7 +401,9 @@ def create_predefined_option_schema(data):
                     ),
                 ),
                 vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_SOURCE_CALC_MULTIPLIER, default=1
@@ -430,7 +433,9 @@ def create_predefined_option_schema(data):
                 vol.Optional(
                     CONF_SOURCE_CALC_SENSOR, default=data[CONF_SOURCE_CALC_SENSOR]
                 ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_SOURCE_CALC_MULTIPLIER,
@@ -468,7 +473,9 @@ def create_cron_option_schema(data):
                     ),
                 ),
                 vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_SOURCE_CALC_MULTIPLIER, default=1
@@ -498,7 +505,9 @@ def create_cron_option_schema(data):
                 vol.Optional(
                     CONF_SOURCE_CALC_SENSOR, default=data[CONF_SOURCE_CALC_SENSOR]
                 ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_SOURCE_CALC_MULTIPLIER,
@@ -534,7 +543,9 @@ def create_multi_option_schema_step_1(data):
                     ),
                 ),
                 vol.Optional(CONF_SOURCE_CALC_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_CREATE_CALCULATION_SENSOR,
@@ -564,7 +575,9 @@ def create_multi_option_schema_step_1(data):
                 vol.Optional(
                     CONF_SOURCE_CALC_SENSOR, default=data[CONF_SOURCE_CALC_SENSOR]
                 ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN]
+                    ),
                 ),
                 vol.Required(
                     CONF_CREATE_CALCULATION_SENSOR,
