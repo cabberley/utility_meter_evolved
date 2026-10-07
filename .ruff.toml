@@ -119,6 +119,7 @@ ignore = [
   "PLR0912", # Too many branches ({branches} > {max_branches})
   "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
   "PLR0915", # Too many statements ({statements} > {max_statements})
+  "PLR0917", # Too many positional arguments in existing entities and fixtures
   "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
   "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
@@ -141,9 +142,6 @@ ignore = [
 
   "TRY003", # Avoid specifying long messages outside the exception class
   "TRY400", # Use `logging.exception` instead of `logging.error`
-  # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
-  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
-
   # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
   "W191",
   "E111",

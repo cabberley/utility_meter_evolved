@@ -11,14 +11,16 @@ from homeassistant.components.utility_meter.const import DOMAIN
 from homeassistant.components.utility_meter.sensor import ATTR_LAST_RESET
 from homeassistant.core import HomeAssistant, State
 
-from tests.common import (
+from pytest_homeassistant_custom_component.common import (
     CLIENT_ID,
     MockConfigEntry,
     MockUser,
     mock_restore_cache_with_extra_data,
 )
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from pytest_homeassistant_custom_component.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+)
+from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 
 
 async def generate_new_hass_access_token(

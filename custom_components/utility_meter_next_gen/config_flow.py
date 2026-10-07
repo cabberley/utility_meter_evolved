@@ -47,23 +47,26 @@ from .schemas import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def validate():
     """Validate the configuration."""
     # This function can be extended to include any validation logic needed.
     return True
 
+
 class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
     """Github Custom config flow."""
 
     VERSION = 8
+    MINOR_VERSION = 2
 
     data: Optional[dict[str, Any]]  # noqa: UP045
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None: # noqa: F821
+    def _validate_state(state: State | None) -> Decimal | None:  # noqa: F821
         """Parse the state as a Decimal if available."""
 
-        #Throws DecimalException if the state is not a number.
+        # Throws DecimalException if the state is not a number.
 
         try:
             return (
@@ -73,6 +76,7 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except DecimalException:
             return None
+
     async def async_step_user(self, user_input: Optional[dict[str, Any]] = None):  # noqa: UP045
         """Initiate a flow when a user starts via the user interface."""
 
@@ -91,7 +95,9 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "source_sensor_not_a_number"
             try:
                 if CONF_SOURCE_CALC_SENSOR in user_input:
-                    source_state = self.hass.states.get(user_input[CONF_SOURCE_CALC_SENSOR])
+                    source_state = self.hass.states.get(
+                        user_input[CONF_SOURCE_CALC_SENSOR]
+                    )
                     if source_state is None:
                         errors["base"] = "source_calc_sensor_not_found"
                     elif source_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -115,7 +121,7 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_predefined()
                 elif user_input.get(CONF_CONFIG_TYPE) == CONF_CONFIG_MULTI:
                     return await self.async_step_multi_step_1()
-                #return await self.async_step_repo()
+                # return await self.async_step_repo()
 
         return self.async_show_form(
             step_id="user", data_schema=BASE_CONFIG_SCHEMA, errors=errors
@@ -138,24 +144,29 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_CONFIG_CALIBRATE_CALC_APPLY] = None
                 self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
                 self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
-                self.data[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                self.data[CONF_CREATE_CALCULATION_SENSOR] = (
+                    CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                )
                 self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
-                self.data[CONF_METER_OFFSET] =(       # noqa: PGH003  # type: ignore
-                    CONF_METER_OFFSET_DURATION_DEFAULT)
-                self.data[CONF_METER_TYPE] = None   # noqa: PGH003# type: ignore
+                self.data[CONF_METER_OFFSET] = (  # noqa: PGH003  # type: ignore
+                    CONF_METER_OFFSET_DURATION_DEFAULT
+                )
+                self.data[CONF_METER_TYPE] = None  # noqa: PGH003# type: ignore
                 self.data[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
-                self.data.update(user_input) # noqa: PGH003 # type: ignore
+                self.data.update(user_input)  # noqa: PGH003 # type: ignore
                 return self.async_create_entry(
                     title=self.data["name"],  # noqa: PGH003 # type: ignore
                     data={},
-                    options=self.data)   # noqa: PGH003 # type: ignore
+                    options=self.data,
+                )  # noqa: PGH003 # type: ignore
 
         return self.async_show_form(
-            step_id="cron", data_schema=create_cron_config_schema(self.data), errors=errors
+            step_id="cron",
+            data_schema=create_cron_config_schema(self.data),
+            errors=errors,
         )
 
-    async def async_step_predefined(self, user_input:
-            Optional[dict[str, Any]] = None):  # noqa: UP045
+    async def async_step_predefined(self, user_input: Optional[dict[str, Any]] = None):  # noqa: UP045
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         self.data = self.data or {}  # Initialize data if not set
@@ -174,21 +185,25 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
                 self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
                 self.data[CONF_CONFIG_CRON] = None  # noqa: PGH003 # type: ignore
-                self.data[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                self.data[CONF_CREATE_CALCULATION_SENSOR] = (
+                    CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                )
                 self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
                 self.data[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
                 self.data.update(user_input)  # noqa: PGH003 # type: ignore
-                return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
-                            data={}, options=self.data)
+                return self.async_create_entry(
+                    title=self.data["name"],  # noqa: PGH003 # type: ignore
+                    data={},
+                    options=self.data,
+                )
 
         return self.async_show_form(
             step_id="predefined",
             data_schema=create_predefined_config_schema(self.data),
-            errors=errors
+            errors=errors,
         )
 
-    async def async_step_multi_step_1(self, user_input:
-            Optional[dict[str, Any]] = None):  # noqa: UP045
+    async def async_step_multi_step_1(self, user_input: dict[str, Any] | None = None):
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         self.data = self.data or {}  # Initialize data if not set
@@ -206,7 +221,9 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_CONFIG_CALIBRATE_CALC_VALUE] = 0
                 self.data[CONF_CONFIG_CALIBRATE_VALUE] = 0
                 self.data[CONF_CONFIG_CRON] = None  # noqa: PGH003 # type: ignore
-                self.data[CONF_CREATE_CALCULATION_SENSOR] = CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                self.data[CONF_CREATE_CALCULATION_SENSOR] = (
+                    CONF_CREATE_CALCULATION_SENSOR_DEFAULT
+                )
                 self.data[CONF_SOURCE_CALC_MULTIPLIER] = 1
                 self.data[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
                 self.data.update(user_input)  # noqa: PGH003 # type: ignore
@@ -215,10 +232,10 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="multi_step_1",
             data_schema=create_multi_config_schema_step_1(self.data),
-            errors=errors
+            errors=errors,
         )
-    async def async_step_multi_step_2(self, user_input:
-            Optional[dict[str, Any]] = None):    # noqa: UP045
+
+    async def async_step_multi_step_2(self, user_input: dict[str, Any] | None = None):
         """Second step in config flow to add a repo to watch."""
         errors: dict[str, str] = {}
         self.data = self.data or {}  # Initialize data if not set
@@ -233,40 +250,43 @@ class UtilityMeterEvolvedCustomConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 # Input is valid, set data.
                 if (
-                    (CONF_CONFIG_CALIBRATE_APPLY in user_input
-                    and user_input[CONF_CONFIG_CALIBRATE_APPLY] == "none")
-                    or (CONF_CONFIG_CALIBRATE_APPLY not in user_input)
-                ):
+                    CONF_CONFIG_CALIBRATE_APPLY in user_input
+                    and user_input[CONF_CONFIG_CALIBRATE_APPLY] == "none"
+                ) or (CONF_CONFIG_CALIBRATE_APPLY not in user_input):
                     user_input[CONF_CONFIG_CALIBRATE_APPLY] = None
                 if (
-                    (CONF_CONFIG_CALIBRATE_CALC_APPLY in user_input
-                    and user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] == "none")
-                    or (CONF_CONFIG_CALIBRATE_CALC_APPLY not in user_input)
-                ):
+                    CONF_CONFIG_CALIBRATE_CALC_APPLY in user_input
+                    and user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] == "none"
+                ) or (CONF_CONFIG_CALIBRATE_CALC_APPLY not in user_input):
                     user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] = None
                 self.data.update(user_input)  # noqa: PGH003 # type: ignore
-                return self.async_create_entry(title=self.data["name"],    # noqa: PGH003 # type: ignore
-                            data={}, options=self.data)
+                return self.async_create_entry(
+                    title=self.data["name"],  # noqa: PGH003 # type: ignore
+                    data={},
+                    options=self.data,
+                )
 
         return self.async_show_form(
             step_id="multi_step_2",
             data_schema=create_multi_config_schema_step_2(self.data),
-            errors=errors
+            errors=errors,
         )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+
 class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow handler."""
-        self.options_schema =None
+        self.options_schema = None
         self.config_type = None
-        self.data = config_entry.options.copy()  #noqa: PGH003 # type: ignore
+        self.data = config_entry.options.copy()  # noqa: PGH003 # type: ignore
         _LOGGER.debug("async Option init self.data: %s", self.data)
         if config_entry.options["config_type"] == CONF_CONFIG_CRON:
             self.config_type = CONF_CONFIG_CRON
@@ -279,10 +299,12 @@ class OptionsFlowHandler(OptionsFlow):
         elif config_entry.options["config_type"] == CONF_CONFIG_MULTI:
             self.config_type = CONF_CONFIG_MULTI
             # Create the options schema for multi config.
-            self.options_schema = create_multi_option_schema_step_2(config_entry.options)
+            self.options_schema = create_multi_option_schema_step_2(
+                config_entry.options
+            )
 
     @staticmethod
-    def _validate_state(state: State | None) -> Decimal | None: # noqa: F821
+    def _validate_state(state: State | None) -> Decimal | None:  # noqa: F821
         """Parse the state as a Decimal if available. Throws DecimalException if not a number."""
         try:
             return (
@@ -293,15 +315,12 @@ class OptionsFlowHandler(OptionsFlow):
         except DecimalException:
             return None
 
-
-    async def async_step_init(
-        self, user_input = None
-    ):
+    async def async_step_init(self, user_input=None):
         """Manage the options for the custom component."""
         errors: dict[str, str] = {}
         if user_input is not None:
             # Get the current repos from the config entry.
-            if CONF_REMOVE_CALC_SENSOR in user_input: # sourcery skip: merge-nested-ifs
+            if CONF_REMOVE_CALC_SENSOR in user_input:  # sourcery skip: merge-nested-ifs
                 if user_input[CONF_REMOVE_CALC_SENSOR]:
                     # Remove the calc sensor from the options.
                     user_input[CONF_SOURCE_CALC_SENSOR] = None
@@ -310,7 +329,9 @@ class OptionsFlowHandler(OptionsFlow):
             try:
                 if CONF_SOURCE_CALC_SENSOR in user_input:
                     if user_input[CONF_SOURCE_CALC_SENSOR] is not None:
-                        source_state = self.hass.states.get(user_input[CONF_SOURCE_CALC_SENSOR])
+                        source_state = self.hass.states.get(
+                            user_input[CONF_SOURCE_CALC_SENSOR]
+                        )
                         if source_state is None:
                             errors["base"] = "source_calc_sensor_not_found"
                         elif source_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -332,7 +353,7 @@ class OptionsFlowHandler(OptionsFlow):
                 user_input[CONF_CONFIG_CALIBRATE_APPLY] = None
                 user_input[CONF_CONFIG_CALIBRATE_CALC_APPLY] = None
                 user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_CRON
-                user_input[CONF_METER_OFFSET] =CONF_METER_OFFSET_DURATION_DEFAULT
+                user_input[CONF_METER_OFFSET] = CONF_METER_OFFSET_DURATION_DEFAULT
                 user_input[CONF_METER_TYPE] = None
             elif self.data["config_type"] == CONF_CONFIG_PREDEFINED:
                 user_input[CONF_CONFIG_CALIBRATE_APPLY] = None
@@ -343,30 +364,30 @@ class OptionsFlowHandler(OptionsFlow):
                 user_input[CONF_CONFIG_CRON] = None
                 user_input[CONF_CONFIG_TYPE] = CONF_CONFIG_MULTI
                 user_input[CONF_METER_OFFSET] = CONF_METER_OFFSET_DURATION_DEFAULT
-                #user_input[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
+                # user_input[CONF_TARIFFS] = []  # noqa: PGH003 # type: ignore
 
             _LOGGER.debug("async Option step 1 self.data: %s", self.data)
 
-            #if self.data["config_type"] == CONF_CONFIG_MULTI:
+            # if self.data["config_type"] == CONF_CONFIG_MULTI:
             #    return await self.async_multi_option_step_2()
 
             _LOGGER.debug("async Option NOT MULTI: %s", self.data["config_type"])
-            return self.async_create_entry(title=self.config_entry.title, data=user_input)
+            return self.async_create_entry(
+                title=self.config_entry.title, data=user_input
+            )
             # For multi config, we need to show the next step.
-            #self.data = user_input
-            #return await self.async_multi_step_2()
-        #options_schema = OPTIONS_SCHEMA
+            # self.data = user_input
+            # return await self.async_multi_step_2()
+        # options_schema = OPTIONS_SCHEMA
         _LOGGER.debug("async Option init schema: %s", self.options_schema)
         return self.async_show_form(
-            step_id="init",
-            data_schema=self.options_schema,
-            errors=errors
+            step_id="init", data_schema=self.options_schema, errors=errors
         )
 
-    async def async_multi_option_step_2(self, user_input = None):
+    async def async_multi_option_step_2(self, user_input=None):
         """Second step in config flow to add a repo to watch."""
-        #errors: dict[str, str] = {}
-        #self.data = self.data or {}  # Initialize data if not set
+        # errors: dict[str, str] = {}
+        # self.data = self.data or {}  # Initialize data if not set
         _LOGGER.debug("async Option step 2 self.data: %s", self.data)
         if user_input is not None:
             # Validate the path.
@@ -375,11 +396,12 @@ class OptionsFlowHandler(OptionsFlow):
             # Input is valid, set data.
             self.data.update(user_input)  # noqa: PGH003 # type: ignore
             return self.async_create_entry(
-                title=self.config_entry.title,
-                data=self.data
+                title=self.config_entry.title, data=self.data
             )
-        _LOGGER.debug("async Option step 2 schema: %s", create_multi_option_schema_step_2(self.data))
+        _LOGGER.debug(
+            "async Option step 2 schema: %s",
+            create_multi_option_schema_step_2(self.data),
+        )
         return self.async_show_form(
-            step_id="init_2",
-            data_schema=create_multi_option_schema_step_2(self.data)
+            step_id="init_2", data_schema=create_multi_option_schema_step_2(self.data)
         )

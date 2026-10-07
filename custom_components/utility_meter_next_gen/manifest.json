@@ -9,8 +9,8 @@
   "integration_type": "helper",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/cabberley/utility_meter_evolved/issues",
-  "requirements": ["cronsim==2.7"],
+  "requirements": [],
   "ssdp": [],
-  "version": "2026.5.1",
+  "version": "2026.10.0",
   "zeroconf": []
 }
