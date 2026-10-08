@@ -110,6 +110,12 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
     hass.states.async_set(
         entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
@@ -228,6 +234,12 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         entity_id,
         STATE_UNAVAILABLE,
     )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    hass.states.async_set(entity_id, "Infinity")
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
