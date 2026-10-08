@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470" role="img" aria-labelledby="title desc">
+  <title id="title">Tariff meters with off-peak selected</title>
+  <desc id="desc">Illustration, not a screenshot. A cumulative energy source feeds the total meter continuously and the off-peak meter while off-peak is selected. The peak meter is paused. The selector switches normal tariff collection, not the price input.</desc>
+  <rect width="900" height="470" rx="16" fill="#f5f8fc"/>
+  <g font-family="sans-serif" fill="#142b43">
+    <text x="30" y="40" font-size="24" font-weight="bold">One source, separate tariff counters</text>
+    <text x="30" y="68" font-size="16">Illustration — off_peak is selected; this is not a UI screenshot</text>
+    <g stroke-width="2">
+      <rect x="30" y="160" width="230" height="100" rx="12" fill="#ffffff" stroke="#276487"/>
+      <rect x="420" y="100" width="220" height="80" rx="12" fill="#e4f4ed" stroke="#24734d"/>
+      <rect x="420" y="210" width="220" height="80" rx="12" fill="#e4f4ed" stroke="#24734d"/>
+      <rect x="420" y="320" width="220" height="80" rx="12" fill="#eef1f5" stroke="#697586"/>
+      <rect x="30" y="320" width="230" height="80" rx="12" fill="#ffffff" stroke="#276487"/>
+    </g>
+    <g font-size="18" font-weight="bold">
+      <text x="48" y="197">Cumulative energy</text>
+      <text x="440" y="132">total</text>
+      <text x="440" y="242">off_peak</text>
+      <text x="440" y="352">peak</text>
+      <text x="48" y="352">Tariff selector</text>
+    </g>
+    <g font-size="16">
+      <text x="48" y="230">Source readings in kWh</text>
+      <text x="440" y="160">Always collecting</text>
+      <text x="440" y="270">Collecting while selected</text>
+      <text x="440" y="380">Paused while not selected</text>
+      <text x="48" y="380">Current option: off_peak</text>
+      <text x="670" y="140">Includes both tariffs</text>
+      <text x="670" y="250">Active tariff only</text>
+      <text x="670" y="360">Retains its total</text>
+      <text x="30" y="444">For costs, supply a separate rate entity that reports the current applicable price.</text>
+    </g>
+  </g>
+  <g fill="none" stroke="#24734d" stroke-width="3">
+    <path d="M260 195h80V140h65"/>
+    <path d="M260 225h80v25h65"/>
+  </g>
+  <g fill="#24734d">
+    <path d="M402 134l12 6-12 6z"/>
+    <path d="M402 244l12 6-12 6z"/>
+  </g>
+  <path d="M260 360h115v-95h30" fill="none" stroke="#276487" stroke-width="2" stroke-dasharray="6 5"/>
+</svg>

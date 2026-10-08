@@ -4,7 +4,7 @@
   <i>Utility Meter Next Generation</i>
   <br>
   <h3 align="center">
-    <i>Home Assistant Custom Integration provding more options for Utility Meters. </i>
+    <i>Home Assistant custom integration providing more options for utility meters.</i>
     <br>
   </h3>
 </h1>
@@ -25,7 +25,7 @@
 
 This custom HACS integration for Home Assistant provides an enhanced set of capabilities for the basic Utility Meter Helper.
 
-Based on the current "Utility Meter" component code in the Home-Assistant/Core. Acknowledgements to [DGomes](https://github.com/dgomes) who is the Code Owner of the core utlity Meter who really did all the hard logic work for the Meter Utility.
+Based on Home Assistant Core's Utility Meter component. Thanks to [DGomes](https://github.com/dgomes), the core Utility Meter code owner, for the original metering logic.
 
 ## Compatibility
 
@@ -34,20 +34,16 @@ Meter Next Gen entities link directly to their source device while the source
 integration remains the device's sole owner, matching Home Assistant's current
 device registry model.
 
-There are lots of enhancements that the Utility Meter Next Gen has added to the original Utility Meter include:
+## What can it do?
 
-- **Create multiple period sensors, optionally with Tariffs and individual Calculation sensors from a single Source and Calculation Sensor**
-- Creating Cron schedule patterns via the Frontend of HA, you no longer need to create them in configuration.yaml!
-- Additional Predefined schedules that should accomodate the majority of people's needs.
-- The addition of an optional secondary sensor/entity that will be used to calculate a value based on the Meters value.
-- Option to create an additional Sensor for the Calculated Value, if you have added a sensor to create a calculated value.
-- All settings of the Meter can be modified through the Frontend. The options reflect the schedule type you created the Meter with (Predefined or CRON).
-- An option to create a "Total" Tariff that will not pause like a normal Tariff does. (You can create a single Sensor set that collects for each tariff period plus the total)
-- Additional extra attributes have been added to the Sensor, so you can see quickly the key information about the sensor and what it is doing.
-- Additional attributes that don't change are not recorded in thhe Recorder DB to avoid unnecessary recorder data bloat.
-- Calibration values can now be set and modified through the Utility Meter configuration.
+- Create consumption meters for one or several reset cycles from a single source.
+- Split consumption into tariffs, with a continuously collecting `total` tariff.
+- Accumulate costs using a rate sensor or `input_number`, optionally exposed as separate calculated sensors.
+- Include a fixed charge or an entity-backed calibration value at each reset.
+- Choose predefined schedules or enter custom CRON schedules in the UI.
+- Reconfigure meters through the UI and inspect current/previous-period values.
 
-These enhancements should provide a very versatile solution to simplify creating, using meters and calculating a secondary value.
+Use accumulated **energy** (Wh/kWh/MWh), gas, or water readings as the source—not instantaneous power (W/kW) or flow rate. See [choosing a source](docs/getting-started.md#choose-your-source).
 
 ## Installation
 
@@ -62,76 +58,37 @@ OR
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=cabberley&repository=utility_meter_evolved&category=integration)
 
-## Using the Utility Meter Next Gen
+## Quick start
 
-After installing the integration, you should now find **Utility Meter Next Gen** in the **Create Helper** list under the Settings --> Devices & services --> Helpers dashboard.
+1. Install from HACS and restart Home Assistant.
+2. Open **Settings → Devices & services → Helpers → Create helper**.
+3. Choose **Utility Meter Next Gen**.
+4. Give it a name, select a cumulative consumption sensor, and choose **Create using a Predefined reset cycle**.
+5. Choose **Daily**, leave tariffs empty, and leave **Delta Values** and **Net Consumption** off for a normal cumulative import sensor.
+6. Submit, then check the new entity in **Developer tools → States** after the source updates.
 
-Follow the instructions to setup your new Meter with an optional Caculation Sensor.
+A new meter collects from setup onward; it does not reconstruct earlier consumption from history.
 
-## Using the Multi Predefined reset cycle Meters
+## Setup guides
 
-This great new feature will take the pain away from setting multiple individual Meters to track your usuage and $$. If you like to track your meters for various periods like every 5 minutes, 30 minutes, hourly, daily, monthly or yearly, this feature enables you to create a single config that will deliver:
+Start with the [documentation hub](docs/README.md) or choose a scenario:
 
-- Individual sensors for each time period.
-- Individual Tariff based sensors for each tariff for each time period.
-- Create a separate Calculation Sensor for every Meter created.
-- A single Select for the tariff selection that will pause/collect all the sensors in alignment with your Select choice.
-- After creation, you can go back and change (add/remove) Predefiend Reset Cycles and if you created a Tariff based set change the list of Tariffs. You can also add or remove the Calculation Sensor if you created a Utility Meter with a Calculation source.
+| What you want to track | Guide |
+| --- | --- |
+| Installation, source selection, and common settings | [Getting started](docs/getting-started.md) |
+| Daily electricity, monthly water/gas, or solar import/export | [Consumption meters](docs/consumption.md) |
+| Electricity cost, changing prices, and a daily standing charge | [Cost meters](docs/costs.md) |
+| Peak/off-peak consumption with automatic tariff switching | [Tariffs](docs/tariffs.md) |
+| Daily, monthly, and yearly sensors from one configuration | [Multiple reset cycles](docs/multiple-cycles.md) |
+| Billing dates and custom reset times | [Schedules and CRON](docs/schedules.md) |
+| Missing values, incorrect costs, calibration, and options | [Troubleshooting](docs/troubleshooting.md) |
 
-In addition to all of that, this special Multiple sensor config, always you to calibrate one of those periods. For example, those that are tracking their daily energy costs, may have a daily "service/connection" charge. With this Config, you can tell the setup to only apply the calibration calculation value to just the "Daily" meter.
+The guides include worked examples, expected results, and labelled setup diagrams. The diagrams are illustrations, not screenshots of a live Home Assistant instance.
 
-When you create a new Utlity Meter using the new "Multi Predefined reset cycle Meters", it is very similar to creating a normal predefined recycle Meter with a few additional options.
+### Important details
 
-1. After choosing your Source Sensors, you are then presented with the next step, select the various time periods you would like meters for. You can choose 1 or choose them all!
-2. After submitting the Predefined list you are then able to optional add some other more granular settings.
-3. The settings will be familiar to the normal Predefined Recycle Meter with the following changes:
-   1. For both the calibration sensors there is a new option to select which of the predefined cycles to apply it to.
-   2. For simplicity, the ability to set an Offset to the recycle times has been removed.
-
-## Some Additional helpers
-
-### Warning
-
-**Do not change the "Entity ID" after creating your meter, it will break the Sensors that this integration creates**
-
-### Selection of Sensors to Monitor
-
-**Some notes on selecting Input Sensor:**
-
-1. Make sure to select the right type of sensor to Meter, for example if you wanting to monitor Energy Consumption, make usre it is an Energy Wh/kWh/MWh are monitoring, not a Power (W/kW/MW). it should be a State Class that is "Total"/"Total Increasing" not a Measurement.
-2. To enable flexibility, the setup only checks that the Input Sensor has a numeric Value, i.e. it should reject a text value. However if it is a mix of numbers and text, it will strip out the text and use the numbers it finds. This could lead to strange results.
-
-**Some notes on selecting Calculation Sensor:**
-
-1. This should be a sensor or an `input_number` helper that has a numeric value, not a text value, it is going to multiply its value with the input sensor. For example, an `input_number` helper with a unit of `USD/kWh` can store your current electricity rate.
-2. This sensor, for example if you are calculating the cost of your energy, would be a one that has a currency value reflecting the cost per x at the time.
-3. The Sensor updates the calculation value when the input sensor value changes, the calculation will use the current value of the Calculation sensor in the calculation at that time, instances where there is a lag in the Calculation Sensor's new value for the period will be reflected in the calaculations until the new value for the calaculation sensor updates for the period. In theory by the end of the period it would be assumed that the Calculation Sensor reflects the true/final value for that period and the last calculations for the period should now be correct. Unfortunately, there isn't really anything to address this without creating all sorts of weird case handling scenarios.
-
-### Some notes on optional configuration settings for your Meters
-
-**Some notes on the use of Tariffs**
-
-1. You only have the option to create Tariffs when you initally create the Utlity Meter.
-2. If you did create a Tariff you can remove or add additional tariffs and reconfigure.
-
-**Some notes on the Calibration setting:**
-
-1. There are seperate calibration settings for the consumption sensor and the Calculating sensor, these are independant of each other.
-2. Each time the meter is reset, the calibration value will be applied to the starting value for the next cycle.
-3. If you are using Tariffs, the Calibration will only apply to a "Total" tariff, not the other ones you create.
-
-A good example of using the calibration sensor is if you are tracking the Cost of your Energy consumption each day. Your energy supplier my have a fixed "Daily" charge in addition to your consumption charges. By Calibrating the Cost sensor to the daily charge, you can combine your fixed and variable costs into the value giving you a more accurate value of your daily costs.
-
-You can optionally select a **Calibration Sensor for Calculation** or **Calibration Sensor for Consumption** (`sensor` or `input_number`) in setup or options instead of entering a fixed calibration value. The selected entity overrides the corresponding fixed value. Its current numeric state is read when the meter first initializes and at each reset, so supplier changes apply automatically to the next cycle, not retrospectively to the current cycle. Missing, unavailable, unknown, nonnumeric, or non-finite readings use zero for that cycle. Clear the entity selection to return to a fixed value. Restored meters retain their current totals until the next reset.
-
-For a UK **cost today** sensor, select your energy import sensor as the consumption source, your per-unit rate sensor as the calculation input, choose a **Daily** cycle, enable **Create a separate Calculation Sensor**, and select your standing-charge sensor as **Calibration Sensor for Calculation**. For multiple cycles, select **Daily** under **Apply Calculation Calibration to which Predefined Cycle?**. Supply the standing charge in the cost sensor's currency (e.g. GBP, not pence); the calculation multiplier applies to consumption costs, not to the standing charge. Convert a pence-based standing charge to pounds with a template sensor first.
-
-**Some notes on the Multiplier setting:**
-
-1. This value is used to align your **RAW** Consumption value to the Calculation Sensors scale.
-2. If you do not need to adjust the multiplier leave it set to 1, if you change it to 0 then your calculated value will always be 0.
-
-**Examples:**
-
-- if your Consumption is being recorded as MWh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 1000.
-- if your Consumption is being recorded as Wh and your Calculation Sensor is $/kWh then you want to convert your MWh to kWH to achieve this the multiplier should be set to 0.0001.
+- Select tariffs during initial setup if you need them. Existing tariff-based meters can have their tariff list edited later.
+- Costs accumulate each consumption change multiplied by the **current** rate and adjustment factor. Changing the rate does not reprice previous consumption.
+- Calibration sets a cycle's starting value; it is independent of the adjustment factor. Entity-backed calibration is read at initialization and each reset, not continuously.
+- For a rate per kWh, use adjustment factor **1** for kWh, **0.001** for Wh, or **1000** for MWh. See the [conversion table](docs/costs.md#units-and-adjustment-factor).
+- Entity IDs in the guides are examples. Use the IDs Home Assistant actually creates, and recheck dashboard/automation references after changing them.
