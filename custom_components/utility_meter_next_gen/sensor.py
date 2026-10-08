@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -10,6 +11,8 @@ import logging
 import re
 from typing import Any, Self
 
+from babel import Locale
+from babel.core import UnknownLocaleError
 from cronsim import CronSim
 import voluptuous as vol
 
@@ -95,6 +98,7 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
+    CONF_WEEK_START_DAY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
@@ -106,6 +110,10 @@ from .const import (
     SIGNAL_RESET_METER,
     SINGLE_TARIFF,
     TOTAL_TARIFF,
+    WEEK_START_DAY_DEFAULT,
+    WEEK_START_DAY_MONDAY,
+    WEEK_START_DAY_SUNDAY,
+    WEEKLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,6 +142,42 @@ def clean_string_display(input_string):
     result = re.sub(r" +", " ", result)
     # Convert to lowercase
     return result.title()
+
+
+def _resolve_week_start_day(configured_day, language, country):
+    """Return the cron weekday for the configured or locale week start."""
+    if configured_day == WEEK_START_DAY_SUNDAY:
+        return 0
+    if configured_day == WEEK_START_DAY_MONDAY:
+        return 1
+
+    try:
+        locale = Locale.parse((language or "en").replace("-", "_"))
+    except (UnknownLocaleError, ValueError):
+        return 0
+
+    if country:
+        with suppress(UnknownLocaleError, ValueError):
+            locale = Locale(
+                locale.language,
+                territory=country.upper(),
+                script=locale.script,
+                variant=locale.variant,
+            )
+
+    return (locale.first_week_day + 1) % 7
+
+
+def _build_predefined_cron_pattern(meter_type, meter_offset, week_start_day):
+    """Build a cron pattern for a predefined meter cycle."""
+    day = meter_offset["days"]
+    if meter_type == WEEKLY:
+        day = (week_start_day + day) % 7
+    return PERIOD2CRON[meter_type].format(
+        minute=meter_offset["minutes"],
+        hour=meter_offset["hours"],
+        day=day,
+    )
 
 
 async def async_setup_entry(
@@ -183,6 +227,11 @@ async def async_setup_entry(
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = config_entry.options[CONF_METER_OFFSET]
     meter_type = config_entry.options[CONF_METER_TYPE]
+    week_start_day = _resolve_week_start_day(
+        config_entry.options.get(CONF_WEEK_START_DAY, WEEK_START_DAY_DEFAULT),
+        hass.config.language,
+        hass.config.country,
+    )
     if meter_type == "none":
         meter_type = None
     name = config_entry.title
@@ -220,6 +269,7 @@ async def async_setup_entry(
                     device=device,
                     meter_offset=meter_offset,
                     meter_type=meter,
+                    week_start_day=week_start_day,
                     name=f"{name} {METER_NAME_TYPES[meter]}",
                     net_consumption=net_consumption,
                     parent_meter=entry_id,
@@ -283,6 +333,7 @@ async def async_setup_entry(
                         device=device,
                         meter_offset=meter_offset,
                         meter_type=meter,
+                        week_start_day=week_start_day,
                         name=f"{name} {METER_NAME_TYPES[meter]} {tariff}",
                         net_consumption=net_consumption,
                         parent_meter=entry_id,
@@ -339,6 +390,7 @@ async def async_setup_entry(
                 device=device,
                 meter_offset=meter_offset,
                 meter_type=meter_type,
+                week_start_day=week_start_day,
                 name=name,
                 net_consumption=net_consumption,
                 parent_meter=entry_id,
@@ -390,6 +442,7 @@ async def async_setup_entry(
                     device=device,
                     meter_offset=meter_offset,
                     meter_type=meter_type,
+                    week_start_day=week_start_day,
                     name=f"{name} {tariff}",
                     net_consumption=net_consumption,
                     parent_meter=entry_id,
@@ -484,6 +537,9 @@ async def async_setup_platform(
             conf_sensor_name = conf_meter_name
 
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
+        week_start_day = _resolve_week_start_day(
+            WEEK_START_DAY_DEFAULT, hass.config.language, hass.config.country
+        )
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
         conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
             CONF_METER_DELTA_VALUES
@@ -506,6 +562,7 @@ async def async_setup_platform(
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
             meter_type=conf_meter_type,
+            week_start_day=week_start_day,
             name=conf_sensor_name,
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
@@ -649,6 +706,7 @@ class UtilityMeterSensor(RestoreSensor):
         tariff,
         unique_id,
         sensor_always_available,
+        week_start_day=0,
         suggested_entity_id=None,
         device: DeviceEntry | None = None,
     ):
@@ -671,11 +729,8 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_multiplier = source_calc_multiplier or Decimal(1)
         self._period = meter_type
         if meter_type is not None:
-            # We convert the period and offset into a cron pattern
-            self._cron_pattern = PERIOD2CRON[meter_type].format(
-                minute=meter_offset["minutes"],
-                hour=meter_offset["hours"],
-                day=meter_offset["days"],
+            self._cron_pattern = _build_predefined_cron_pattern(
+                meter_type, meter_offset, week_start_day
             )
             _LOGGER.debug("CRON pattern TYPE: %s", self._cron_pattern)
         else:
