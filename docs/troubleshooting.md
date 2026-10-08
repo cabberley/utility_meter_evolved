@@ -71,6 +71,7 @@ Open the helper's options from its Settings entry. Depending on the configuratio
 - Clearing a calibration entity selection returns that calibration to its fixed value.
 - Configuration type is fixed; create a new helper to change between predefined, multiple, and CRON.
 - Adding new cycles does not backfill history; removing cycles/tariffs can remove entities.
+- Multiple-cycle helpers currently require at least two actual reset cycles. If reduced to one, restore a second cycle in options or create a single-predefined helper.
 - Example entity IDs in these guides are placeholders. If you rename an ID, update external dashboard, script, and automation references and verify the linked calculated sensor afterward.
 
 ## Manual calibration and reset

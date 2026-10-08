@@ -10,7 +10,7 @@
 2. Choose your cumulative energy source.
 3. Optionally select a numeric rate sensor or `input_number` for costs.
 4. Select **Create Multiple Predefined reset cycle Meters** and submit.
-5. Choose **Daily**, **Monthly**, and **Yearly** in **Predefined Reset Cycle**, then submit.
+5. Choose **Daily**, **Monthly**, and **Yearly** in **Predefined Reset Cycle**, then submit. Select at least two cycles; the current implementation cannot load a multiple-cycle helper with only one selected cycle.
 6. In the next form:
    - Leave tariffs empty unless you want [tariff splitting](tariffs.md).
    - Leave Delta Values and Net Consumption off for cumulative import.
@@ -64,5 +64,7 @@ Only select periods you will use; many cycles and tariffs can create a large ent
 ## Reconfigure
 
 Open the helper's options to add/remove cycles, update sources, edit existing tariffs, or enable/disable separate calculation sensors. The configuration stays a multiple-predefined-cycle setup; it does not switch to CRON.
+
+**Current limitation:** retain at least **two actual reset cycles**. A multiple-cycle helper with only one selected cycle fails to load; an empty selection or **No cycle** is not a valid multiple-cycle setup either. If you only need one period, create a single-predefined helper instead.
 
 Before removing a cycle or tariff, record the values you need and check dashboards and automations referencing its entities. New entities do not reconstruct earlier data. After changing the selected cycles, recheck both calibration target selections and `next_reset` on each meter.

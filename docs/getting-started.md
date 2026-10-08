@@ -45,7 +45,7 @@ After submitting:
 
 - **Predefined:** choose one reset cycle, then configure the common options.
 - **CRON:** enter a reset pattern, then configure the common options.
-- **Multiple:** select the cycles first, then submit to configure the common options and calibration targets.
+- **Multiple:** select at least two reset cycles first, then submit to configure the common options and calibration targets. Use the single predefined configuration for just one cycle; see the [current multiple-cycle limitation](multiple-cycles.md#reconfigure).
 
 Calculation-specific setup fields appear when a calculation input is selected.
 
