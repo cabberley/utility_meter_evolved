@@ -265,3 +265,32 @@ async def test_invalid_calibration_reading(hass: HomeAssistant, reading, caplog)
     assert Decimal(meter.extra_state_attributes[ATTR_CALC_CURRENT_VALUE]) == Decimal(
         "0.65"
     )
+
+
+async def test_unknown_source_is_silent_and_meter_recovers(
+    hass: HomeAssistant, options, caplog
+):
+    """Unknown source readings are silent; valid readings restore availability."""
+    hass.states.async_set("sensor.energy", "100", {"unit_of_measurement": "kWh"})
+    await hass.async_start()
+    entry = MockConfigEntry(
+        domain=DOMAIN, options=options, title="Electricity", version=8
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    meter = next(
+        entity
+        for entity in hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS]
+        if isinstance(entity, UtilityMeterSensor)
+    )
+
+    caplog.clear()
+    hass.states.async_set("sensor.energy", "unknown")
+    await hass.async_block_till_done()
+    assert not any("invalid new state" in record.message for record in caplog.records)
+    assert not meter.available
+
+    hass.states.async_set("sensor.energy", "101", {"unit_of_measurement": "kWh"})
+    await hass.async_block_till_done()
+    assert meter.available
