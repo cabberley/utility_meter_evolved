@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340" role="img" aria-labelledby="title desc">
+  <title id="title">Utility Meter Next Gen setup flow</title>
+  <desc id="desc">Illustration, not a screenshot. Choose a consumption source and optional rate, select predefined, multiple, or CRON scheduling, configure options, and inspect the generated entities.</desc>
+  <rect width="960" height="340" rx="16" fill="#f5f8fc"/>
+  <g font-family="sans-serif" fill="#142b43">
+    <text x="32" y="40" font-size="24" font-weight="bold">Set up a Utility Meter Next Gen helper</text>
+    <text x="32" y="68" font-size="16">Illustrated workflow — not a Home Assistant screenshot</text>
+    <g fill="#ffffff" stroke="#276487" stroke-width="2">
+      <rect x="30" y="110" width="200" height="160" rx="12"/>
+      <rect x="265" y="110" width="200" height="160" rx="12"/>
+      <rect x="500" y="110" width="200" height="160" rx="12"/>
+      <rect x="735" y="110" width="195" height="160" rx="12"/>
+    </g>
+    <g font-size="18" font-weight="bold">
+      <text x="46" y="143">1. Choose inputs</text>
+      <text x="281" y="143">2. Reset schedule</text>
+      <text x="516" y="143">3. Options</text>
+      <text x="751" y="143">4. Check entities</text>
+    </g>
+    <g font-size="16">
+      <text x="46" y="178">Name your helper</text>
+      <text x="46" y="205">Consumption source</text>
+      <text x="46" y="232">Optional current rate</text>
+      <text x="281" y="178">One predefined cycle</text>
+      <text x="281" y="205">Multiple cycles</text>
+      <text x="281" y="232">Custom CRON</text>
+      <text x="516" y="178">Source behavior</text>
+      <text x="516" y="205">Tariffs / calibration</text>
+      <text x="516" y="232">Calculation settings</text>
+      <text x="751" y="178">Wait for source update</text>
+      <text x="751" y="205">Check usage and cost</text>
+      <text x="751" y="232">Inspect next_reset</text>
+    </g>
+    <text x="32" y="312" font-size="16">Settings → Devices &amp; services → Helpers → Create helper → Utility Meter Next Gen</text>
+  </g>
+  <g fill="#276487">
+    <path d="M237 185h14v-7l10 12-10 12v-7h-14z"/>
+    <path d="M472 185h14v-7l10 12-10 12v-7h-14z"/>
+    <path d="M707 185h14v-7l10 12-10 12v-7h-14z"/>
+  </g>
+</svg>
