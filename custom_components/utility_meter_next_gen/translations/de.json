@@ -35,6 +35,7 @@
                     "periodically_resetting": "Periodisch zurücksetzend",
                     "reset_cycle": "Rücksetzzyklus",
                     "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "week_start_day": "Wochenstart",
                     "tariffs": "Tarife - fügen Sie einen 'total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
                 },
                 "description": "",
@@ -48,10 +49,11 @@
                     "create_calculation_sensor": "Zusätzlich zum Verbrauchssensor wird ein Berechnungssensor erstellt, der zur Berechnung eines Preisattributs für den Zähler verwendet werden kann. Wenn Sie dies nicht benötigen, können Sie es hier deaktivieren.",
                     "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
                     "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
-                    "offset": "Verschiebt den Tag/die Stunde/die Minute des Zähler-Resets (Sekunden werden derzeit ignoriert). Dies ist nützlich, wenn Sie den Zähler an einem bestimmten Tag des Monats starten möchten.",
+                    "offset": "Verschiebt den Zähler-Reset um Tage, Stunden oder Minuten (Sekunden werden ignoriert). Bei Wochenzählern beziehen sich Tages-Offsets auf den ausgewählten Wochenstart.",
                     "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
                     "reset_cycle": "Wählen Sie einen vordefinierten Rücksetzzyklus für den Zähler. Dies bestimmt, wie oft der Zähler seine Werte zurücksetzt.",
                     "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
+                    "week_start_day": "Wählen Sie den ersten Wochentag für Wochenzähler oder verwenden Sie die Home-Assistant-Regionseinstellung.",
                     "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'total'-Tarif hinzu."
                 }
             },
@@ -88,11 +90,13 @@
             },
             "multi_step_1": {
                 "data": {
-                    "cycle": "Vordefinierter Rücksetzzyklus"
+                    "cycle": "Vordefinierter Rücksetzzyklus",
+                    "week_start_day": "Wochenstart"
                 },
                 "description": "Wählen Sie vordefinierte Rücksetzzyklen für den Verbrauchszähler.",
                 "data_description": {
-                    "cycle": "Wählen Sie einen oder mehrere vordefinierte Rücksetzzyklen für den Zähler."
+                    "cycle": "Wählen Sie einen oder mehrere vordefinierte Rücksetzzyklen für den Zähler.",
+                    "week_start_day": "Wählen Sie den ersten Wochentag für Wochenzähler oder verwenden Sie die Home-Assistant-Regionseinstellung."
                 }
             },
             "multi_step_2": {
@@ -152,6 +156,7 @@
                     "remove_calc_sensor": "Eingangs-Berechnungssensor entfernen",
                     "source": "Eingangssensor zur Verfolgung des Verbrauchs (erforderlich)",
                     "source_calc_multiplier": "Anpassungsfaktor für den Berechnungssensor (optional)",
+                    "week_start_day": "Wochenstart",
                     "source_calc_sensor": "Eingangs-Berechnungssensor (optional, wenn Sie einen Preiszähler erstellen möchten)",
                     "tariffs": "Tarife - fügen Sie einen 'Total'-Tarif hinzu, um den Gesamtverbrauch zu verfolgen"
                 },
@@ -167,11 +172,12 @@
                     "cycle": "Wählen Sie einen vordefinierten Rücksetzzyklus für den Zähler. Dies bestimmt, wie oft der Zähler seine Werte zurücksetzt.",
                     "delta_values": "Aktivieren, wenn die Quellwerte Delta-Werte seit der letzten Messung anstelle von Absolutwerten sind.",
                     "net_consumption": "Aktivieren, wenn die Quelle ein Nettozähler ist, d.h. er kann sowohl steigen als auch fallen.",
-                    "offset": "Verschiebt den Tag/die Stunde/die Minute des Zähler-Resets (Sekunden werden derzeit ignoriert). Dies ist nützlich, wenn Sie den Zähler an einem bestimmten Tag des Monats starten möchten.",
+                    "offset": "Verschiebt den Zähler-Reset um Tage, Stunden oder Minuten (Sekunden werden ignoriert). Bei Wochenzählern beziehen sich Tages-Offsets auf den ausgewählten Wochenstart.",
                     "periodically_resetting": "Aktivieren, wenn die Quelle periodisch auf 0 zurückgesetzt werden kann, z.B. beim Booten des Messgeräts. Wenn deaktiviert, werden neue Messwerte direkt nach Datenunverfügbarkeit erfasst.",
                     "remove_calc_sensor": "Wenn Sie keinen Berechnungssensor verwenden möchten, können Sie ihn hier entfernen. Dadurch werden die Attributwerte im Sensor nicht mehr angezeigt.",
                     "source_calc_multiplier": "Wenn Sie die Berechnung an den Rohquellsensor anpassen müssen, können Sie hier den Multiplikator einstellen. Wenn Ihr Eingangs-Berechnungssensor beispielsweise in $/kWh und Ihr Verbrauchssensor in MW ist, würden Sie diesen auf 1000 setzen, um den korrekten Preis zu erhalten.",
                     "source_calc_sensor": "Wenn Sie einen Sensor verwenden möchten, um ein Preisattribut für den Zähler zu berechnen, wählen Sie ihn hier aus. Wenn nicht ausgewählt, meldet der Zähler nur den Quellwert.",
+                    "week_start_day": "Wählen Sie den ersten Wochentag für Wochenzähler oder verwenden Sie die Home-Assistant-Regionseinstellung.",
                     "tariffs": "Eine Liste der unterstützten Tarife. Lassen Sie diese leer, wenn nur ein einziger Tarif benötigt wird. Wenn Sie den Gesamtverbrauch verfolgen möchten, fügen Sie einen 'Total'-Tarif hinzu."
                 }
             },
@@ -218,6 +224,13 @@
             "cron": "Mit einem benutzerdefinierten CRON-Muster erstellen",
             "predefined": "Mit einem vordefinierten Rücksetzzyklus erstellen",
             "multi": "Mehrere vordefinierte Rücksetzzyklus-Zähler erstellen"
+            }
+        },
+        "week_start_day": {
+            "options": {
+                "default": "Home-Assistant-Regionseinstellung verwenden",
+                "monday": "Montag",
+                "sunday": "Sonntag"
             }
         }
     },

@@ -33,10 +33,13 @@ from .const import (
     CONF_SOURCE_CALC_SENSOR,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
+    CONF_WEEK_START_DAY,
     CONFIG_TYPES,
     DEVICE_CLASSES_METER,
     METER_TYPES,
     MULTI_METER_TYPES,
+    WEEK_START_DAY_DEFAULT,
+    WEEK_START_DAY_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,6 +94,14 @@ BASE_PREDEFINED_CONFIG_SCHEMA = vol.Schema(
                 enable_day=True,
             ),
         ),
+        vol.Optional(
+            CONF_WEEK_START_DAY, default=WEEK_START_DAY_DEFAULT
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=WEEK_START_DAY_OPTIONS,
+                translation_key=CONF_WEEK_START_DAY,
+            ),
+        ),
     }
 )
 
@@ -109,6 +120,14 @@ BASE_MULTI_CONFIG_SCHEMA_STEP_1 = vol.Schema(
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 custom_value=False,
                 multiple=True,
+            ),
+        ),
+        vol.Optional(
+            CONF_WEEK_START_DAY, default=WEEK_START_DAY_DEFAULT
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=WEEK_START_DAY_OPTIONS,
+                translation_key=CONF_WEEK_START_DAY,
             ),
         ),
     }
@@ -326,6 +345,15 @@ def create_base_predefined_option_schema(data):
         ): selector.DurationSelector(
             selector.DurationSelectorConfig(
                 enable_day=True,
+            ),
+        ),
+        vol.Optional(
+            CONF_WEEK_START_DAY,
+            default=data.get(CONF_WEEK_START_DAY, WEEK_START_DAY_DEFAULT),
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=WEEK_START_DAY_OPTIONS,
+                translation_key=CONF_WEEK_START_DAY,
             ),
         ),
     }
@@ -618,6 +646,20 @@ def create_multi_option_schema_step_1(data):
                 ),
             }
         )
+    multi_option_step_1 = vol.Schema(
+        {
+            **multi_option_step_1.schema,
+            vol.Optional(
+                CONF_WEEK_START_DAY,
+                default=data.get(CONF_WEEK_START_DAY, WEEK_START_DAY_DEFAULT),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=WEEK_START_DAY_OPTIONS,
+                    translation_key=CONF_WEEK_START_DAY,
+                ),
+            ),
+        }
+    )
     meter_types = {
         vol.Required(
             CONF_METER_TYPE, default=data[CONF_METER_TYPE]
