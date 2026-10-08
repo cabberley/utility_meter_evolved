@@ -847,9 +847,8 @@ class UtilityMeterSensor(RestoreSensor):
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (
-            (new_state_val := self._validate_state(new_state)) is None
-            or not new_state_val.is_finite()
-        ):
+            new_state_val := self._validate_state(new_state)
+        ) is None or not new_state_val.is_finite():
             if new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 _LOGGER.warning(
                     "%s received an invalid new state from %s : %s",
