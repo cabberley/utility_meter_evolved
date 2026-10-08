@@ -93,6 +93,8 @@ SINGLE_TARIFF = "single_tariff"
 TOTAL_TARIFF = "total"
 
 CONF_CONFIG_CALIBRATE_APPLY = "calibrate_apply"
+CONF_CONFIG_CALIBRATE_SENSOR = "calibrate_sensor"
+CONF_CONFIG_CALIBRATE_CALC_SENSOR = "calibrate_calc_sensor"
 CONF_CONFIG_CALIBRATE_CALC_APPLY = "calibrate_calc_apply"
 CONF_CONFIG_CALIBRATE_CALC_VALUE = "calibrate_calc_value"
 CONF_CONFIG_CALIBRATE_VALUE = "calibrate_value"

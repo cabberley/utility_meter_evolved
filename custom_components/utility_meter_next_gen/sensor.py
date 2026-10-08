@@ -76,7 +76,9 @@ from .const import (
     COLLECTING,
     CONF_CONFIG_CALIBRATE_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_APPLY,
+    CONF_CONFIG_CALIBRATE_CALC_SENSOR,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
+    CONF_CONFIG_CALIBRATE_SENSOR,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CREATE_CALCULATION_SENSOR,
     CONF_CRON_PATTERN,
@@ -160,10 +162,22 @@ async def async_setup_entry(
         CONF_CONFIG_CALIBRATE_CALC_APPLY, None
     )
     calibrate_calc_value = config_entry.options.get(
-        CONF_CONFIG_CALIBRATE_CALC_VALUE, Decimal(0)
-    )
+        CONF_CONFIG_CALIBRATE_CALC_SENSOR
+    ) or config_entry.options.get(CONF_CONFIG_CALIBRATE_CALC_VALUE, Decimal(0))
     calibrate_apply = config_entry.options.get(CONF_CONFIG_CALIBRATE_APPLY, None)
-    calibrate_value = config_entry.options.get(CONF_CONFIG_CALIBRATE_VALUE, Decimal(0))
+    calibrate_value = config_entry.options.get(
+        CONF_CONFIG_CALIBRATE_SENSOR
+    ) or config_entry.options.get(CONF_CONFIG_CALIBRATE_VALUE, Decimal(0))
+    for key, value in (
+        (CONF_CONFIG_CALIBRATE_SENSOR, calibrate_value),
+        (CONF_CONFIG_CALIBRATE_CALC_SENSOR, calibrate_calc_value),
+    ):
+        if config_entry.options.get(key):
+            resolved = er.async_validate_entity_id(registry, value)
+            if key == CONF_CONFIG_CALIBRATE_SENSOR:
+                calibrate_value = resolved
+            else:
+                calibrate_calc_value = resolved
     create_calc_sensor = config_entry.options[CONF_CREATE_CALCULATION_SENSOR]
     cron_pattern = config_entry.options[CONF_CRON_PATTERN]
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
@@ -671,7 +685,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
         self._sensor_periodically_resetting = periodically_resetting
-        self._calibrate_value = Decimal(calibrate_value) or Decimal(0)
+        self._calibrate_value = calibrate_value or Decimal(0)
         self._calibrate_calc_value = calibrate_calc_value or Decimal(0)
         self._tariff = tariff
         self._tariff_entity = tariff_entity
@@ -693,9 +707,24 @@ class UtilityMeterSensor(RestoreSensor):
         """Initialize unit and state upon source initial update."""
         self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        self._attr_native_value = Decimal(self._calibrate_value)
-        self._attr_calculated_current_value = Decimal(self._calibrate_calc_value)
+        self._attr_native_value = self._calibration_value(self._calibrate_value)
+        self._attr_calculated_current_value = self._calibration_value(
+            self._calibrate_calc_value
+        )
         self.async_write_ha_state()
+
+    def _calibration_value(self, value: Decimal | float | str) -> Decimal:
+        """Read entity-backed offsets at initialization and each cycle reset."""
+        if isinstance(value, str) and value.startswith(("sensor.", "input_number.")):
+            state = self.hass.states.get(value)
+            result = self._validate_state(state)
+            if result is None or not result.is_finite():
+                _LOGGER.warning(
+                    "Calibration source %s has no valid numeric state", value
+                )
+                return Decimal(0)
+            return result
+        return Decimal(str(value))
 
     @staticmethod
     def _validate_state(state: State | None) -> Decimal | None:
@@ -902,8 +931,10 @@ class UtilityMeterSensor(RestoreSensor):
         # update Calculated value if we have a calculation sensor
         if self._sensor_calc_source_id is not None:
             self._attr_calculated_last_value = self._attr_calculated_current_value
-        self._attr_calculated_current_value = Decimal(self._calibrate_calc_value)
-        self._attr_native_value = Decimal(self._calibrate_value)
+        self._attr_calculated_current_value = self._calibration_value(
+            self._calibrate_calc_value
+        )
+        self._attr_native_value = self._calibration_value(self._calibrate_value)
         self.async_write_ha_state()
 
     async def async_calibrate(self, value):
@@ -1125,7 +1156,7 @@ class UtilityMeterCalculatedSensor(RestoreSensor):
         self,
         hass: HomeAssistant,
         attribute: str,
-        calibrate_calc_value: Decimal,
+        calibrate_calc_value: Decimal | str,
         cron_pattern: str | None,
         device_class: SensorDeviceClass | None,
         device: DeviceEntry | None,

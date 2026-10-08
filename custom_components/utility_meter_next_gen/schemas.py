@@ -12,7 +12,9 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_CONFIG_CALIBRATE_APPLY,
     CONF_CONFIG_CALIBRATE_CALC_APPLY,
+    CONF_CONFIG_CALIBRATE_CALC_SENSOR,
     CONF_CONFIG_CALIBRATE_CALC_VALUE,
+    CONF_CONFIG_CALIBRATE_SENSOR,
     CONF_CONFIG_CALIBRATE_VALUE,
     CONF_CONFIG_CRON,
     CONF_CONFIG_PREDEFINED,
@@ -38,6 +40,17 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def create_calibration_sensor_schema(data, key):
+    """Suggest the current entity while allowing the selection to be cleared."""
+    field = vol.Optional(key, description={"suggested_value": data.get(key)})
+    return {
+        field: selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN])
+        )
+    }
+
 
 BASE_CONFIG_SCHEMA = vol.Schema(
     {
@@ -133,6 +146,7 @@ def create_calc_extras_schema(data):
     )
     if data[CONF_SOURCE_CALC_SENSOR] is not None:
         return {
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_CALC_SENSOR),
             vol.Required(
                 CONF_CREATE_CALCULATION_SENSOR, default=create_calc_sensor_default
             ): selector.BooleanSelector(selector.BooleanSelectorConfig()),
@@ -160,6 +174,7 @@ def create_common_multi_config_schema_step_2a(data):
     """Create the common configuration schema for multi configurations."""
     return vol.Schema(
         {
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_SENSOR),
             vol.Optional(
                 CONF_CONFIG_CALIBRATE_VALUE, default=0
             ): selector.NumberSelector(
@@ -191,6 +206,7 @@ def create_common_multi_config_schema_step_2b(data):
     )
     if data[CONF_SOURCE_CALC_SENSOR] is not None:
         return {
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_CALC_SENSOR),
             vol.Required(
                 CONF_CREATE_CALCULATION_SENSOR, default=create_calc_sensor_default
             ): selector.BooleanSelector(selector.BooleanSelectorConfig()),
@@ -252,6 +268,7 @@ def create_predefined_config_schema(data):
     return vol.Schema(
         {
             **BASE_PREDEFINED_CONFIG_SCHEMA.schema,
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_SENSOR),
             **(create_calc_extras_schema(data) or {}),
             **BASE_COMMON_CONFIG_SCHEMA,
         }
@@ -264,6 +281,7 @@ def create_cron_config_schema(data):
     return vol.Schema(
         {
             **BASE_CRON_CONFIG_SCHEMA.schema,
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_SENSOR),
             **(create_calc_extras_schema(data) or {}),
             **BASE_COMMON_CONFIG_SCHEMA,
         }
@@ -326,6 +344,8 @@ def create_base_cron_option_schema(data):
 def create_common_option_schema(data):
     """Create the common options schema for all configurations."""
     option_schema = {
+        **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_SENSOR),
+        **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_CALC_SENSOR),
         vol.Required(
             CONF_CREATE_CALCULATION_SENSOR,
             default=data[CONF_CREATE_CALCULATION_SENSOR],
@@ -717,6 +737,14 @@ def create_multi_option_schema_step_2(data):
     return vol.Schema(
         {
             **create_multi_option_schema_step_1(data).schema,
+            **create_calibration_sensor_schema(data, CONF_CONFIG_CALIBRATE_SENSOR),
+            **(
+                create_calibration_sensor_schema(
+                    data, CONF_CONFIG_CALIBRATE_CALC_SENSOR
+                )
+                if data[CONF_SOURCE_CALC_SENSOR] is not None
+                else {}
+            ),
             **multi_option_step_2.schema,
             **multi_option_calc,
             **multi_option_common,

@@ -122,6 +122,10 @@ When you create a new Utlity Meter using the new "Multi Predefined reset cycle M
 
 A good example of using the calibration sensor is if you are tracking the Cost of your Energy consumption each day. Your energy supplier my have a fixed "Daily" charge in addition to your consumption charges. By Calibrating the Cost sensor to the daily charge, you can combine your fixed and variable costs into the value giving you a more accurate value of your daily costs.
 
+You can optionally select a **Calibration Sensor for Calculation** or **Calibration Sensor for Consumption** (`sensor` or `input_number`) in setup or options instead of entering a fixed calibration value. The selected entity overrides the corresponding fixed value. Its current numeric state is read when the meter first initializes and at each reset, so supplier changes apply automatically to the next cycle, not retrospectively to the current cycle. Missing, unavailable, unknown, nonnumeric, or non-finite readings use zero for that cycle. Clear the entity selection to return to a fixed value. Restored meters retain their current totals until the next reset.
+
+For a UK **cost today** sensor, select your energy import sensor as the consumption source, your per-unit rate sensor as the calculation input, choose a **Daily** cycle, enable **Create a separate Calculation Sensor**, and select your standing-charge sensor as **Calibration Sensor for Calculation**. For multiple cycles, select **Daily** under **Apply Calculation Calibration to which Predefined Cycle?**. Supply the standing charge in the cost sensor's currency (e.g. GBP, not pence); the calculation multiplier applies to consumption costs, not to the standing charge. Convert a pence-based standing charge to pounds with a template sensor first.
+
 **Some notes on the Multiplier setting:**
 
 1. This value is used to align your **RAW** Consumption value to the Calculation Sensors scale.
