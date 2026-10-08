@@ -1,0 +1,253 @@
+{
+    "title": "Utility Meter Next Gen",
+    "config": {
+        "error": {
+            "tariffs_not_unique": "Tarieven moeten uniek zijn",
+            "invalid_cron": "Het ingevoerde cronpatroon is ongeldig. Controleer de syntaxis."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "config_type": "Configuratietype",
+                    "name": "Naam van de nieuwe sensor",
+                    "source": "Invoersensor voor meting (verplicht)",
+                    "source_calc_sensor": "Invoersensor voor berekening (optioneel, als je een prijsmeter wilt maken)"
+                },
+                "data_description": {
+                    "config_type": "Kies het type Utility Meter dat je wilt maken: een vooraf gedefinieerde resetcyclus, een aangepast cronpatroon of een set vooraf gedefinieerde Utility Meters (genereert meerdere resetcycli vanuit één configuratie).",
+                    "source_calc_sensor": "Als je een sensor wilt gebruiken om een prijsattribuut voor de meter te berekenen, selecteer die dan hier. Als er niets is geselecteerd, rapporteert de meter alleen de bronwaarde."
+                },
+                "description": "Maak een sensor die het verbruik van diverse nutsvoorzieningen (bijv. energie, gas, water, verwarming) bijhoudt over een ingestelde periode. De utility meter-sensor kan optioneel het verbruik opsplitsen per tarief. In dat geval wordt voor elk tarief een sensor aangemaakt, evenals een selectie-entiteit om het huidige tarief te kiezen, en kunnen eventueel kosten worden berekend door te combineren met een prijssensor.",
+                "title": "Maak een Next Gen Utility Meter"
+            },
+            "predefined": {
+                "data": {
+                    "calibrate_calc_sensor": "Kalibratiesensor voor berekening (optioneel)",
+                    "calibrate_sensor": "Kalibratiesensor voor verbruik (optioneel)",
+                    "always_available": "Sensor altijd beschikbaar",
+                    "calibrate_calc_value": "Kalibratiewaarde voor berekening (optioneel)",
+                    "calibrate_value": "Kalibratiewaarde voor verbruik (optioneel)",
+                    "create_calculation_sensor": "Maak een aparte berekeningssensor (optioneel)",
+                    "cycle": "Vooraf gedefinieerde resetcyclus",
+                    "delta_values": "Deltawaarden",
+                    "net_consumption": "Netto verbruik",
+                    "offset": "Offset (optioneel, bijv. om een beginwaarde voor de meter in te stellen)",
+                    "periodically_resetting": "Periodiek resetten",
+                    "reset_cycle": "Resetcyclus",
+                    "source_calc_multiplier": "Aanpassingsfactor voor de berekeningssensor (optioneel)",
+                    "week_start_day": "Eerste dag van de week",
+                    "tariffs": "Tarieven - voeg een 'total'-tarief toe om het totale verbruik bij te houden"
+                },
+                "description": "",
+                "title": "Stel de meter in met een vooraf gedefinieerd schema",
+                "data_description": {
+                    "calibrate_calc_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor de berekening. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld. Gebruik dezelfde valuta-eenheden als de kostensensor.",
+                    "calibrate_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor het verbruik. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld.",
+                    "always_available": "Indien ingeschakeld toont de sensor altijd de laatst bekende waarde, ook als de bronentiteit niet beschikbaar of onbekend is.",
+                    "calibrate_calc_value": "Wanneer de resetcyclus wordt bereikt, wordt de berekeningssensor op deze waarde gezet. Dit is handig als je de berekening van de meter met een specifieke waarde wilt laten beginnen.",
+                    "calibrate_value": "Wanneer de resetcyclus wordt bereikt, wordt de verbruikssensor op deze waarde gezet. Dit is handig als je de meter met een specifieke waarde wilt laten beginnen.",
+                    "create_calculation_sensor": "Naast de verbruikssensor wordt een berekeningssensor aangemaakt die gebruikt kan worden om een prijsattribuut voor de meter te berekenen. Als je dit niet nodig hebt, kun je het hier uitschakelen.",
+                    "delta_values": "Schakel in als de bronwaarden deltawaarden zijn sinds de laatste meting in plaats van absolute waarden.",
+                    "net_consumption": "Schakel in als de bron een netmeter is, wat betekent dat de waarde zowel kan stijgen als dalen.",
+                    "offset": "Verschuif de meterreset met dagen, uren of minuten (seconden worden genegeerd). Bij wekelijkse meters zijn de dagverschuivingen relatief ten opzichte van de gekozen eerste dag van de week.",
+                    "periodically_resetting": "Schakel in als de bron periodiek naar 0 kan resetten, bijvoorbeeld bij het opstarten van het meetapparaat. Indien uitgeschakeld worden nieuwe metingen direct vastgelegd na een periode van onbeschikbaarheid van gegevens.",
+                    "reset_cycle": "Selecteer een vooraf gedefinieerde resetcyclus voor de meter. Hiermee bepaal je hoe vaak de meter zijn waarden reset.",
+                    "source_calc_multiplier": "Als je de berekening moet aanpassen zodat deze overeenkomt met de ruwe bronsensor, kun je hier de vermenigvuldigingsfactor instellen. Als je invoerberekeningssensor bijvoorbeeld in $/kWh is en je verbruikssensor in MW, stel je dit in op 1000 om de juiste prijs te krijgen.",
+                    "week_start_day": "Kies de eerste dag van de week voor wekelijkse meters, of gebruik de landinstelling van Home Assistant.",
+                    "tariffs": "Een lijst met ondersteunde tarieven. Laat leeg als er maar één tarief nodig is. Als je het totale verbruik wilt bijhouden, voeg dan een 'total'-tarief toe."
+                }
+            },
+            "cron": {
+                "data": {
+                    "calibrate_calc_sensor": "Kalibratiesensor voor berekening (optioneel)",
+                    "calibrate_sensor": "Kalibratiesensor voor verbruik (optioneel)",
+                    "always_available": "Sensor altijd beschikbaar",
+                    "calibrate_calc_value": "Kalibratiewaarde voor berekening (optioneel)",
+                    "calibrate_value": "Kalibratiewaarde voor verbruik (optioneel)",
+                    "create_calculation_sensor": "Maak een aparte berekeningssensor (optioneel)",
+                    "cron": "Maak een cronpatroon, bijv. 0/5 * * * *",
+                    "delta_values": "Deltawaarden",
+                    "net_consumption": "Netto verbruik",
+                    "periodically_resetting": "Periodiek resetten",
+                    "source_calc_multiplier": "Aanpassingsfactor voor de berekeningssensor (optioneel)",
+                    "tariffs": "Tarieven - voeg een 'total'-tarief toe om het totale verbruik bij te houden"
+                },
+                "description": "",
+                "title": "Stel de meter in met een cronpatroon",
+                "data_description": {
+                    "calibrate_calc_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor de berekening. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld. Gebruik dezelfde valuta-eenheden als de kostensensor.",
+                    "calibrate_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor het verbruik. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld.",
+                    "always_available": "Indien ingeschakeld toont de sensor altijd de laatst bekende waarde, ook als de bronentiteit niet beschikbaar of onbekend is.",
+                    "calibrate_calc_value": "Wanneer de resetcyclus wordt bereikt, wordt de berekeningssensor op deze waarde gezet. Dit is handig als je de berekening van de meter met een specifieke waarde wilt laten beginnen.",
+                    "calibrate_value": "Wanneer de resetcyclus wordt bereikt, wordt de verbruikssensor op deze waarde gezet. Dit is handig als je de meter met een specifieke waarde wilt laten beginnen.",
+                    "create_calculation_sensor": "Naast de verbruikssensor wordt een berekeningssensor aangemaakt die gebruikt kan worden om een prijsattribuut voor de meter te berekenen. Als je dit niet nodig hebt, kun je het hier uitschakelen.",
+                    "delta_values": "Schakel in als de bronwaarden deltawaarden zijn sinds de laatste meting in plaats van absolute waarden.",
+                    "net_consumption": "Schakel in als de bron een netmeter is, wat betekent dat de waarde zowel kan stijgen als dalen.",
+                    "periodically_resetting": "Schakel in als de bron periodiek naar 0 kan resetten, bijvoorbeeld bij het opstarten van het meetapparaat. Indien uitgeschakeld worden nieuwe metingen direct vastgelegd na een periode van onbeschikbaarheid van gegevens.",
+                    "source_calc_multiplier": "Als je de berekening moet aanpassen zodat deze overeenkomt met de ruwe bronsensor, kun je hier de vermenigvuldigingsfactor instellen. Als je invoerberekeningssensor bijvoorbeeld in $/kWh is en je verbruikssensor in MW, stel je dit in op 1000 om de juiste prijs te krijgen.",
+                    "tariffs": "Een lijst met ondersteunde tarieven. Laat leeg als er maar één tarief nodig is. Als je het totale verbruik wilt bijhouden, voeg dan een 'total'-tarief toe."
+                }
+            },
+            "multi_step_1": {
+                "data": {
+                    "cycle": "Vooraf gedefinieerde resetcyclus",
+                    "week_start_day": "Eerste dag van de week"
+                },
+                "description": "Selecteer vooraf gedefinieerde resetcycli voor de Utility Meter.",
+                "data_description": {
+                    "cycle": "Selecteer een of meer vooraf gedefinieerde resetcycli voor de meter.",
+                    "week_start_day": "Kies de eerste dag van de week voor wekelijkse meters, of gebruik de landinstelling van Home Assistant."
+                }
+            },
+            "multi_step_2": {
+                "data": {
+                    "calibrate_calc_sensor": "Kalibratiesensor voor berekening (optioneel)",
+                    "calibrate_sensor": "Kalibratiesensor voor verbruik (optioneel)",
+                    "always_available": "Sensor altijd beschikbaar",
+                    "calibrate_apply": "Kalibratie toepassen op welke vooraf gedefinieerde cyclus? (optioneel)",
+                    "calibrate_calc_apply": "Berekeningskalibratie toepassen op welke vooraf gedefinieerde cyclus? (optioneel)",
+                    "calibrate_calc_value": "Kalibratiewaarde voor berekening (optioneel)",
+                    "calibrate_value": "Kalibratiewaarde voor verbruik (optioneel)",
+                    "create_calculation_sensor": "Maak een aparte berekeningssensor (optioneel)",
+                    "delta_values": "Deltawaarden",
+                    "net_consumption": "Netto verbruik",
+                    "periodically_resetting": "Periodiek resetten",
+                    "source_calc_multiplier": "Aanpassingsfactor voor de berekeningssensor (optioneel)",
+                    "tariffs": "Tarieven - voeg een 'total'-tarief toe om het totale verbruik bij te houden"
+                },
+                "description": "Configureer de opties van de Utility Meter.",
+                "data_description": {
+                    "calibrate_calc_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor de berekening van de geselecteerde cyclus. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld. Gebruik dezelfde valuta-eenheden als de kostensensor.",
+                    "calibrate_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor het verbruik van de geselecteerde cyclus. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld.",
+                    "always_available": "Indien ingeschakeld toont de sensor altijd de laatst bekende waarde, ook als de bronentiteit niet beschikbaar of onbekend is.",
+                    "calibrate_apply": "Kalibratie toepassen op welke vooraf gedefinieerde cyclus? (Als je geen kalibratie nodig hebt en deze op 0 staat, laat je dit gewoon op de standaard weergegeven cyclus staan)",
+                    "calibrate_calc_apply": "Berekeningskalibratie toepassen op welke vooraf gedefinieerde cyclus? (Als je geen kalibratie nodig hebt en deze op 0 staat, laat je dit gewoon op de standaard weergegeven cyclus staan)",
+                    "calibrate_calc_value": "Wanneer de resetcyclus wordt bereikt, wordt de berekeningssensor op deze waarde gezet. Dit is handig als je de berekening van de meter met een specifieke waarde wilt laten beginnen.",
+                    "calibrate_value": "Wanneer de resetcyclus wordt bereikt, wordt de verbruikssensor op deze waarde gezet. Dit is handig als je de meter met een specifieke waarde wilt laten beginnen.",
+                    "create_calculation_sensor": "Naast de verbruikssensor wordt een berekeningssensor aangemaakt die gebruikt kan worden om een prijsattribuut voor de meter te berekenen. Als je dit niet nodig hebt, kun je het hier uitschakelen.",
+                    "delta_values": "Schakel in als de bronwaarden deltawaarden zijn sinds de laatste meting in plaats van absolute waarden.",
+                    "net_consumption": "Schakel in als de bron een netmeter is, wat betekent dat de waarde zowel kan stijgen als dalen.",
+                    "periodically_resetting": "Schakel in als de bron periodiek naar 0 kan resetten, bijvoorbeeld bij het opstarten van het meetapparaat. Indien uitgeschakeld worden nieuwe metingen direct vastgelegd na een periode van onbeschikbaarheid van gegevens.",
+                    "source_calc_multiplier": "Als je de berekening moet aanpassen zodat deze overeenkomt met de ruwe bronsensor, kun je hier de vermenigvuldigingsfactor instellen. Als je invoerberekeningssensor bijvoorbeeld in $/kWh is en je verbruikssensor in MW, stel je dit in op 1000 om de juiste prijs te krijgen.",
+                    "tariffs": "Een lijst met ondersteunde tarieven. Laat leeg als er maar één tarief nodig is. Als je het totale verbruik wilt bijhouden, voeg dan een 'total'-tarief toe."
+                },
+                "title": "Configureer opties"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calibrate_calc_sensor": "Kalibratiesensor voor berekening (optioneel)",
+                    "calibrate_sensor": "Kalibratiesensor voor verbruik (optioneel)",
+                    "always_available": "Sensor altijd beschikbaar",
+                    "calibrate_apply": "Kalibratie toepassen op welke vooraf gedefinieerde cyclus? (optioneel)",
+                    "calibrate_calc_apply": "Berekeningskalibratie toepassen op welke vooraf gedefinieerde cyclus? (optioneel)",
+                    "calibrate_calc_value": "Kalibratiewaarde voor berekening (optioneel)",
+                    "calibrate_value": "Kalibratiewaarde voor verbruik (optioneel)",
+                    "create_calculation_sensor": "Maak een aparte berekeningssensor (optioneel)",
+                    "cron": "Aangepast cronpatroon",
+                    "cycle": "Vooraf gedefinieerde resetcyclus",
+                    "delta_values": "Deltawaarden",
+                    "net_consumption": "Netto verbruik",
+                    "offset": "Offset (optioneel, bijv. om een beginwaarde voor de meter in te stellen)",
+                    "periodically_resetting": "Periodiek resetten",
+                    "remove_calc_sensor": "Verwijder invoerberekeningssensor",
+                    "source": "Invoersensor om het verbruik bij te houden (verplicht)",
+                    "source_calc_multiplier": "Aanpassingsfactor voor de berekeningssensor (optioneel)",
+                    "week_start_day": "Eerste dag van de week",
+                    "source_calc_sensor": "Invoersensor voor berekening (optioneel, als je een prijsmeter wilt maken)",
+                    "tariffs": "Tarieven - voeg een 'total'-tarief toe om het totale verbruik bij te houden"
+                },
+                "data_description": {
+                    "calibrate_calc_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor de berekening. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld. Gebruik dezelfde valuta-eenheden als de kostensensor. Wis deze selectie om weer een vaste waarde te gebruiken.",
+                    "calibrate_sensor": "Gebruik deze sensor of numerieke helper in plaats van de vaste kalibratiewaarde voor het verbruik. Wordt uitgelezen bij initialisatie en bij elke reset; ongeldige of niet-beschikbare waarden worden als nul behandeld. Wis deze selectie om weer een vaste waarde te gebruiken.",
+                    "always_available": "Indien ingeschakeld toont de sensor altijd de laatst bekende waarde, ook als de bronentiteit niet beschikbaar of onbekend is.",
+                    "calibrate_apply": "Kalibratie toepassen op welke vooraf gedefinieerde cyclus? (Als je geen kalibratie nodig hebt en deze op 0 staat, laat je dit gewoon op de standaard weergegeven cyclus staan)",
+                    "calibrate_calc_apply": "Berekeningskalibratie toepassen op welke vooraf gedefinieerde cyclus? (Als je geen kalibratie nodig hebt en deze op 0 staat, laat je dit gewoon op de standaard weergegeven cyclus staan)",
+                    "calibrate_calc_value": "Wanneer de resetcyclus wordt bereikt, wordt de berekeningssensor op deze waarde gezet. Dit is handig als je de berekening van de meter met een specifieke waarde wilt laten beginnen.",
+                    "calibrate_value": "Wanneer de resetcyclus wordt bereikt, wordt de verbruikssensor op deze waarde gezet. Dit is handig als je de meter met een specifieke waarde wilt laten beginnen.",
+                    "create_calculation_sensor": "Naast de verbruikssensor wordt een berekeningssensor aangemaakt die gebruikt kan worden om een prijsattribuut voor de meter te berekenen. Als je dit niet nodig hebt, kun je het hier uitschakelen.",
+                    "cycle": "Selecteer een vooraf gedefinieerde resetcyclus voor de meter. Hiermee bepaal je hoe vaak de meter zijn waarden reset.",
+                    "delta_values": "Schakel in als de bronwaarden deltawaarden zijn sinds de laatste meting in plaats van absolute waarden.",
+                    "net_consumption": "Schakel in als de bron een netmeter is, wat betekent dat de waarde zowel kan stijgen als dalen.",
+                    "offset": "Verschuif de meterreset met dagen, uren of minuten (seconden worden genegeerd). Bij wekelijkse meters zijn de dagverschuivingen relatief ten opzichte van de gekozen eerste dag van de week.",
+                    "periodically_resetting": "Schakel in als de bron periodiek naar 0 kan resetten, bijvoorbeeld bij het opstarten van het meetapparaat. Indien uitgeschakeld worden nieuwe metingen direct vastgelegd na een periode van onbeschikbaarheid van gegevens.",
+                    "remove_calc_sensor": "Als je geen berekeningssensor wilt gebruiken, kun je deze hier verwijderen. De attribuutwaarden worden dan niet meer in de sensor getoond.",
+                    "source_calc_multiplier": "Als je de berekening moet aanpassen zodat deze overeenkomt met de ruwe bronsensor, kun je hier de vermenigvuldigingsfactor instellen. Als je invoerberekeningssensor bijvoorbeeld in $/kWh is en je verbruikssensor in MW, stel je dit in op 1000 om de juiste prijs te krijgen.",
+                    "source_calc_sensor": "Als je een sensor wilt gebruiken om een prijsattribuut voor de meter te berekenen, selecteer die dan hier. Als er niets is geselecteerd, rapporteert de meter alleen de bronwaarde.",
+                    "week_start_day": "Kies de eerste dag van de week voor wekelijkse meters, of gebruik de landinstelling van Home Assistant.",
+                    "tariffs": "Een lijst met ondersteunde tarieven. Laat leeg als er maar één tarief nodig is. Als je het totale verbruik wilt bijhouden, voeg dan een 'total'-tarief toe."
+                }
+            },
+            "init_2": {
+                "data": {
+                    "config_calibrate_apply": "Kalibratie toepassen",
+                    "config_calibrate_value": "Kalibratiewaarde",
+                    "config_cron": "Aangepast cronpatroon",
+                    "config_type": "Configuratietype",
+                    "source_calc_multiplier": "Aanpassingsfactor voor de berekeningssensor (optioneel)"
+                },
+                "data_description": {
+                    "config_calibrate_apply": "Selecteer de sensor waarop de kalibratiewaarde moet worden toegepast.",
+                    "config_calibrate_value": "Stel de waarde in waarop de meter gekalibreerd moet worden.",
+                    "config_cron": "Voer een aangepast cronpatroon in voor de resetcyclus.",
+                    "config_type": "Kies tussen vooraf gedefinieerde cycli of aangepaste cronpatronen.",
+                    "source_calc_multiplier": "Als je de berekening moet aanpassen zodat deze overeenkomt met de ruwe bronsensor, kun je hier de vermenigvuldigingsfactor instellen."
+                },
+                "title": "Configureer opties"
+            }
+        }
+    },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Elke twee maanden",
+                "daily": "Dagelijks",
+                "every-five-minutes": "Elke 5 minuten",
+                "every-ten-minutes": "Elke 10 minuten",
+                "every-twenty-minutes": "Elke 20 minuten",
+                "half-hourly": "Elke 30 minuten",
+                "half-yearly": "Halfjaarlijks",
+                "hourly": "Elk uur",
+                "monthly": "Maandelijks",
+                "none": "Geen cyclus",
+                "quarter-hourly": "Elke 15 minuten",
+                "quarterly": "Per kwartaal",
+                "weekly": "Wekelijks",
+                "yearly": "Jaarlijks"
+            }
+        },
+        "config_type": {
+            "options": {
+                "cron": "Aanmaken met een aangepast cronpatroon",
+                "predefined": "Aanmaken met een vooraf gedefinieerde resetcyclus",
+                "multi": "Meerdere meters met vooraf gedefinieerde resetcycli aanmaken"
+            }
+        },
+        "week_start_day": {
+            "options": {
+                "default": "Gebruik landinstelling van Home Assistant",
+                "monday": "Maandag",
+                "sunday": "Zondag"
+            }
+        }
+    },
+    "services": {
+        "calibrate": {
+            "description": "Kalibreert een utility meter-sensor.",
+            "fields": {
+                "value": {
+                    "description": "Waarde waarop de meter moet worden ingesteld.",
+                    "name": "Waarde"
+                }
+            },
+            "name": "Kalibreren"
+        },
+        "reset": {
+            "description": "Reset alle tellers van een utility meter.",
+            "name": "Resetten"
+        }
+    }
+}
