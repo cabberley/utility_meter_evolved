@@ -51,6 +51,7 @@ jobs:
           python3 -m pip install
           pytest-homeassistant-custom-component==0.13.353
           cronsim==2.7
+          babel==2.18.0
 
       - name: Test
         run: python3 -m pytest
