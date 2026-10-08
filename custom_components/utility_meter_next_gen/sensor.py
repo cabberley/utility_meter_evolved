@@ -774,9 +774,13 @@ class UtilityMeterSensor(RestoreSensor):
             state = self.hass.states.get(value)
             result = self._validate_state(state)
             if result is None or not result.is_finite():
-                _LOGGER.warning(
-                    "Calibration source %s has no valid numeric state", value
-                )
+                if state is not None and state.state not in (
+                    STATE_UNAVAILABLE,
+                    STATE_UNKNOWN,
+                ):
+                    _LOGGER.warning(
+                        "Calibration source %s has no valid numeric state", value
+                    )
                 return Decimal(0)
             return result
         return Decimal(str(value))
@@ -829,7 +833,7 @@ class UtilityMeterSensor(RestoreSensor):
         """Handle the sensor state changes."""
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
-        ) is None or source_state.state == STATE_UNAVAILABLE:
+        ) is None or source_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             if not self._sensor_always_available:
                 self._attr_available = False
                 self.async_write_ha_state()
@@ -843,12 +847,13 @@ class UtilityMeterSensor(RestoreSensor):
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
-            _LOGGER.warning(
-                "%s received an invalid new state from %s : %s",
-                self.name,
-                self._sensor_source_id,
-                new_state.state,
-            )
+            if new_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                _LOGGER.warning(
+                    "%s received an invalid new state from %s : %s",
+                    self.name,
+                    self._sensor_source_id,
+                    new_state.state,
+                )
             return
 
         if self.native_value is None:
@@ -908,6 +913,7 @@ class UtilityMeterSensor(RestoreSensor):
             ATTR_UNIT_OF_MEASUREMENT
         )
         self._last_valid_state = new_state_val
+        self._attr_available = True
         self.async_write_ha_state()
 
     @callback

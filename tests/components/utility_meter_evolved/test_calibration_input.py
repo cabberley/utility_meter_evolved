@@ -223,7 +223,7 @@ async def test_standing_charge_cost_and_reset(
     "reading",
     [None, "unknown", "unavailable", "invalid", "NaN", "Infinity", "-Infinity"],
 )
-async def test_invalid_calibration_reading(hass: HomeAssistant, reading):
+async def test_invalid_calibration_reading(hass: HomeAssistant, reading, caplog):
     """Invalid calibration sources cannot corrupt consumption or cost totals."""
     meter = UtilityMeterSensor(
         cron_pattern=None,
@@ -248,12 +248,15 @@ async def test_invalid_calibration_reading(hass: HomeAssistant, reading):
     meter.async_write_ha_state = Mock()
     if reading is not None:
         hass.states.async_set("sensor.charge", reading)
+    caplog.clear()
     meter.start({})
     assert meter.native_value == 0
     assert Decimal(meter.extra_state_attributes[ATTR_CALC_CURRENT_VALUE]) == 0
     await meter.async_reset_meter(None)
     assert meter.native_value == 0
     assert Decimal(meter.extra_state_attributes[ATTR_CALC_CURRENT_VALUE]) == 0
+    if reading in (None, "unknown", "unavailable"):
+        assert not any("Calibration source" in record.message for record in caplog.records)
     hass.states.async_set("sensor.charge", "0.65")
     await meter.async_reset_meter(None)
     assert meter.native_value == Decimal("0.65")

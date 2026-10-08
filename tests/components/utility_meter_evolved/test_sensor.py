@@ -89,7 +89,9 @@ async def set_utc(hass: HomeAssistant):
         ),
     ],
 )
-async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
+async def test_state(
+    hass: HomeAssistant, yaml_config, config_entry_config, caplog
+) -> None:
     """Test utility sensor state."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
@@ -109,6 +111,14 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
+
+    caplog.clear()
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert not any("invalid new state" in record.message for record in caplog.records)
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
     hass.states.async_set(
         entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
