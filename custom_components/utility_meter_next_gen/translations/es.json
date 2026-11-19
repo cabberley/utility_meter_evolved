@@ -1,0 +1,253 @@
+{
+    "title": "Utility Meter Next Gen",
+    "config": {
+        "error": {
+            "tariffs_not_unique": "Las tarifas deben ser únicas",
+            "invalid_cron": "El patrón CRON introducido no es válido. Comprueba la sintaxis."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "config_type": "Tipo de configuración",
+                    "name": "Nombre del nuevo sensor",
+                    "source": "Sensor de entrada para la medición (obligatorio)",
+                    "source_calc_sensor": "Sensor de cálculo de entrada (opcional, para crear un contador de precio)"
+                },
+                "data_description": {
+                    "config_type": "Elige el tipo de contador de consumo que quieres crear: con un ciclo de reinicio predefinido, con un patrón CRON personalizado o un conjunto de contadores de consumo predefinidos (genera varios ciclos de reinicio a partir de una sola configuración).",
+                    "source_calc_sensor": "Si quieres usar un sensor para calcular un atributo de precio del contador, selecciónalo aquí. Si no lo seleccionas, el contador solo mostrará el valor de origen."
+                },
+                "description": "Crea un sensor que registra el consumo de diversos suministros (p. ej., energía, gas, agua, calefacción) durante un periodo de tiempo configurado. El sensor del contador de consumo permite, opcionalmente, dividir el consumo por tarifas; en ese caso, se crea un sensor para cada tarifa, además de una entidad de selección para elegir la tarifa actual, y, opcionalmente, se puede calcular un coste combinándolo con un sensor de precio.",
+                "title": "Crear un contador de consumo Next Gen"
+            },
+            "predefined": {
+                "data": {
+                    "calibrate_calc_sensor": "Sensor de calibración para el cálculo (opcional)",
+                    "calibrate_sensor": "Sensor de calibración para el consumo (opcional)",
+                    "always_available": "Sensor siempre disponible",
+                    "calibrate_calc_value": "Valor de calibración para el cálculo (opcional)",
+                    "calibrate_value": "Valor de calibración para el consumo (opcional)",
+                    "create_calculation_sensor": "Crear un sensor de cálculo independiente (opcional)",
+                    "cycle": "Ciclo de reinicio predefinido",
+                    "delta_values": "Valores delta",
+                    "net_consumption": "Consumo neto",
+                    "offset": "Desfase (opcional, p. ej., para fijar un valor inicial del contador)",
+                    "periodically_resetting": "Reinicio periódico",
+                    "reset_cycle": "Ciclo de reinicio",
+                    "source_calc_multiplier": "Factor de ajuste del sensor de cálculo (opcional)",
+                    "week_start_day": "Primer día de la semana",
+                    "tariffs": "Tarifas: añade una tarifa 'total' para registrar el consumo total"
+                },
+                "description": "",
+                "title": "Configurar el contador con una programación predefinida",
+                "data_description": {
+                    "calibrate_calc_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del cálculo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero. Usa las mismas unidades monetarias que el sensor de coste.",
+                    "calibrate_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del consumo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero.",
+                    "always_available": "Si se activa, el sensor mostrará siempre el último valor conocido, aunque la entidad de origen no esté disponible o su estado sea desconocido.",
+                    "calibrate_calc_value": "Al llegar el ciclo de reinicio, el sensor de cálculo se establecerá en este valor. Es útil si quieres que el sensor de cálculo empiece en un valor concreto.",
+                    "calibrate_value": "Al llegar el ciclo de reinicio, el sensor de consumo se establecerá en este valor. Es útil si quieres que el contador empiece en un valor concreto.",
+                    "create_calculation_sensor": "Además del sensor de consumo, se creará un sensor de cálculo que puede usarse para calcular un atributo de precio del contador. Si no lo necesitas, puedes desactivarlo aquí.",
+                    "delta_values": "Actívalo si los valores de origen son valores delta desde la última lectura en lugar de valores absolutos.",
+                    "net_consumption": "Actívalo si el origen es un contador neto, es decir, que puede tanto aumentar como disminuir.",
+                    "offset": "Desplaza el reinicio del contador en días, horas o minutos (los segundos se ignoran). En los contadores semanales, los desfases en días se cuentan a partir del primer día de la semana seleccionado.",
+                    "periodically_resetting": "Actívalo si el origen puede reiniciarse periódicamente a 0, por ejemplo, al arrancar el dispositivo de medición. Si está desactivado, las nuevas lecturas se registran directamente tras un periodo sin datos disponibles.",
+                    "reset_cycle": "Selecciona un ciclo de reinicio predefinido para el contador. Determina con qué frecuencia el contador reinicia sus valores.",
+                    "source_calc_multiplier": "Si necesitas ajustar el cálculo para que coincida con el sensor de origen sin procesar, puedes establecer aquí el multiplicador. Por ejemplo, si tu sensor de cálculo de entrada está en $/kWh y tu sensor de consumo está en MW, tendrías que establecerlo en 1000 para obtener el precio correcto.",
+                    "week_start_day": "Elige el primer día de la semana para los contadores semanales o usa la configuración regional de Home Assistant.",
+                    "tariffs": "Lista de tarifas admitidas; déjala vacía si solo necesitas una tarifa. Si quieres registrar el consumo total, añade una tarifa 'total'."
+                }
+            },
+            "cron": {
+                "data": {
+                    "calibrate_calc_sensor": "Sensor de calibración para el cálculo (opcional)",
+                    "calibrate_sensor": "Sensor de calibración para el consumo (opcional)",
+                    "always_available": "Sensor siempre disponible",
+                    "calibrate_calc_value": "Valor de calibración para el cálculo (opcional)",
+                    "calibrate_value": "Valor de calibración para el consumo (opcional)",
+                    "create_calculation_sensor": "Crear un sensor de cálculo independiente (opcional)",
+                    "cron": "Crea un patrón CRON, p. ej., 0/5 * * * *",
+                    "delta_values": "Valores delta",
+                    "net_consumption": "Consumo neto",
+                    "periodically_resetting": "Reinicio periódico",
+                    "source_calc_multiplier": "Factor de ajuste del sensor de cálculo (opcional)",
+                    "tariffs": "Tarifas: añade una tarifa 'total' para registrar el consumo total"
+                },
+                "description": "",
+                "title": "Configurar el contador con un patrón CRON",
+                "data_description": {
+                    "calibrate_calc_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del cálculo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero. Usa las mismas unidades monetarias que el sensor de coste.",
+                    "calibrate_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del consumo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero.",
+                    "always_available": "Si se activa, el sensor mostrará siempre el último valor conocido, aunque la entidad de origen no esté disponible o su estado sea desconocido.",
+                    "calibrate_calc_value": "Al llegar el ciclo de reinicio, el sensor de cálculo se establecerá en este valor. Es útil si quieres que el sensor de cálculo empiece en un valor concreto.",
+                    "calibrate_value": "Al llegar el ciclo de reinicio, el sensor de consumo se establecerá en este valor. Es útil si quieres que el contador empiece en un valor concreto.",
+                    "create_calculation_sensor": "Además del sensor de consumo, se creará un sensor de cálculo que puede usarse para calcular un atributo de precio del contador. Si no lo necesitas, puedes desactivarlo aquí.",
+                    "delta_values": "Actívalo si los valores de origen son valores delta desde la última lectura en lugar de valores absolutos.",
+                    "net_consumption": "Actívalo si el origen es un contador neto, es decir, que puede tanto aumentar como disminuir.",
+                    "periodically_resetting": "Actívalo si el origen puede reiniciarse periódicamente a 0, por ejemplo, al arrancar el dispositivo de medición. Si está desactivado, las nuevas lecturas se registran directamente tras un periodo sin datos disponibles.",
+                    "source_calc_multiplier": "Si necesitas ajustar el cálculo para que coincida con el sensor de origen sin procesar, puedes establecer aquí el multiplicador. Por ejemplo, si tu sensor de cálculo de entrada está en $/kWh y tu sensor de consumo está en MW, tendrías que establecerlo en 1000 para obtener el precio correcto.",
+                    "tariffs": "Lista de tarifas admitidas; déjala vacía si solo necesitas una tarifa. Si quieres registrar el consumo total, añade una tarifa 'total'."
+                }
+            },
+            "multi_step_1": {
+                "data": {
+                    "cycle": "Ciclo de reinicio predefinido",
+                    "week_start_day": "Primer día de la semana"
+                },
+                "description": "Selecciona los ciclos de reinicio predefinidos del contador de consumo.",
+                "data_description": {
+                    "cycle": "Selecciona uno o varios ciclos de reinicio predefinidos para el contador.",
+                    "week_start_day": "Elige el primer día de la semana para los contadores semanales o usa la configuración regional de Home Assistant."
+                }
+            },
+            "multi_step_2": {
+                "data": {
+                    "calibrate_calc_sensor": "Sensor de calibración para el cálculo (opcional)",
+                    "calibrate_sensor": "Sensor de calibración para el consumo (opcional)",
+                    "always_available": "Sensor siempre disponible",
+                    "calibrate_apply": "¿A qué ciclo predefinido aplicar la calibración? (opcional)",
+                    "calibrate_calc_apply": "¿A qué ciclo predefinido aplicar la calibración del cálculo? (opcional)",
+                    "calibrate_calc_value": "Valor de calibración para el cálculo (opcional)",
+                    "calibrate_value": "Valor de calibración para el consumo (opcional)",
+                    "create_calculation_sensor": "Crear un sensor de cálculo independiente (opcional)",
+                    "delta_values": "Valores delta",
+                    "net_consumption": "Consumo neto",
+                    "periodically_resetting": "Reinicio periódico",
+                    "source_calc_multiplier": "Factor de ajuste del sensor de cálculo (opcional)",
+                    "tariffs": "Tarifas: añade una tarifa 'total' para registrar el consumo total"
+                },
+                "description": "Configura las opciones del contador de consumo.",
+                "data_description": {
+                    "calibrate_calc_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del cálculo para el ciclo seleccionado. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero. Usa las mismas unidades monetarias que el sensor de coste.",
+                    "calibrate_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del consumo para el ciclo seleccionado. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero.",
+                    "always_available": "Si se activa, el sensor mostrará siempre el último valor conocido, aunque la entidad de origen no esté disponible o su estado sea desconocido.",
+                    "calibrate_apply": "¿A qué ciclo predefinido aplicar la calibración? (Si no necesitas calibración y está en 0, deja el ciclo que se muestra por defecto)",
+                    "calibrate_calc_apply": "¿A qué ciclo predefinido aplicar la calibración del cálculo? (Si no necesitas calibración y está en 0, deja el ciclo que se muestra por defecto)",
+                    "calibrate_calc_value": "Al llegar el ciclo de reinicio, el sensor de cálculo se establecerá en este valor. Es útil si quieres que el sensor de cálculo empiece en un valor concreto.",
+                    "calibrate_value": "Al llegar el ciclo de reinicio, el sensor de consumo se establecerá en este valor. Es útil si quieres que el contador empiece en un valor concreto.",
+                    "create_calculation_sensor": "Además del sensor de consumo, se creará un sensor de cálculo que puede usarse para calcular un atributo de precio del contador. Si no lo necesitas, puedes desactivarlo aquí.",
+                    "delta_values": "Actívalo si los valores de origen son valores delta desde la última lectura en lugar de valores absolutos.",
+                    "net_consumption": "Actívalo si el origen es un contador neto, es decir, que puede tanto aumentar como disminuir.",
+                    "periodically_resetting": "Actívalo si el origen puede reiniciarse periódicamente a 0, por ejemplo, al arrancar el dispositivo de medición. Si está desactivado, las nuevas lecturas se registran directamente tras un periodo sin datos disponibles.",
+                    "source_calc_multiplier": "Si necesitas ajustar el cálculo para que coincida con el sensor de origen sin procesar, puedes establecer aquí el multiplicador. Por ejemplo, si tu sensor de cálculo de entrada está en $/kWh y tu sensor de consumo está en MW, tendrías que establecerlo en 1000 para obtener el precio correcto.",
+                    "tariffs": "Lista de tarifas admitidas; déjala vacía si solo necesitas una tarifa. Si quieres registrar el consumo total, añade una tarifa 'total'."
+                },
+                "title": "Configurar opciones"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calibrate_calc_sensor": "Sensor de calibración para el cálculo (opcional)",
+                    "calibrate_sensor": "Sensor de calibración para el consumo (opcional)",
+                    "always_available": "Sensor siempre disponible",
+                    "calibrate_apply": "¿A qué ciclo predefinido aplicar la calibración? (opcional)",
+                    "calibrate_calc_apply": "¿A qué ciclo predefinido aplicar la calibración del cálculo? (opcional)",
+                    "calibrate_calc_value": "Valor de calibración para el cálculo (opcional)",
+                    "calibrate_value": "Valor de calibración para el consumo (opcional)",
+                    "create_calculation_sensor": "Crear un sensor de cálculo independiente (opcional)",
+                    "cron": "Patrón CRON personalizado",
+                    "cycle": "Ciclo de reinicio predefinido",
+                    "delta_values": "Valores delta",
+                    "net_consumption": "Consumo neto",
+                    "offset": "Desfase (opcional, p. ej., para fijar un valor inicial del contador)",
+                    "periodically_resetting": "Reinicio periódico",
+                    "remove_calc_sensor": "Quitar el sensor de cálculo de entrada",
+                    "source": "Sensor de entrada para registrar el consumo (obligatorio)",
+                    "source_calc_multiplier": "Factor de ajuste del sensor de cálculo (opcional)",
+                    "week_start_day": "Primer día de la semana",
+                    "source_calc_sensor": "Sensor de cálculo de entrada (opcional, para crear un contador de precio)",
+                    "tariffs": "Tarifas: añade una tarifa 'total' para registrar el consumo total"
+                },
+                "data_description": {
+                    "calibrate_calc_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del cálculo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero. Usa las mismas unidades monetarias que el sensor de coste. Borra esta selección para volver a usar un valor fijo.",
+                    "calibrate_sensor": "Usa este sensor o ayudante numérico en lugar del valor fijo de calibración del consumo. Se lee al inicializar y en cada reinicio; las lecturas no válidas o no disponibles cuentan como cero. Borra esta selección para volver a usar un valor fijo.",
+                    "always_available": "Si se activa, el sensor mostrará siempre el último valor conocido, aunque la entidad de origen no esté disponible o su estado sea desconocido.",
+                    "calibrate_apply": "¿A qué ciclo predefinido aplicar la calibración? (Si no necesitas calibración y está en 0, deja el ciclo que se muestra por defecto)",
+                    "calibrate_calc_apply": "¿A qué ciclo predefinido aplicar la calibración del cálculo? (Si no necesitas calibración y está en 0, deja el ciclo que se muestra por defecto)",
+                    "calibrate_calc_value": "Al llegar el ciclo de reinicio, el sensor de cálculo se establecerá en este valor. Es útil si quieres que el sensor de cálculo empiece en un valor concreto.",
+                    "calibrate_value": "Al llegar el ciclo de reinicio, el sensor de consumo se establecerá en este valor. Es útil si quieres que el contador empiece en un valor concreto.",
+                    "create_calculation_sensor": "Además del sensor de consumo, se creará un sensor de cálculo que puede usarse para calcular un atributo de precio del contador. Si no lo necesitas, puedes desactivarlo aquí.",
+                    "cycle": "Selecciona un ciclo de reinicio predefinido para el contador. Determina con qué frecuencia el contador reinicia sus valores.",
+                    "delta_values": "Actívalo si los valores de origen son valores delta desde la última lectura en lugar de valores absolutos.",
+                    "net_consumption": "Actívalo si el origen es un contador neto, es decir, que puede tanto aumentar como disminuir.",
+                    "offset": "Desplaza el reinicio del contador en días, horas o minutos (los segundos se ignoran). En los contadores semanales, los desfases en días se cuentan a partir del primer día de la semana seleccionado.",
+                    "periodically_resetting": "Actívalo si el origen puede reiniciarse periódicamente a 0, por ejemplo, al arrancar el dispositivo de medición. Si está desactivado, las nuevas lecturas se registran directamente tras un periodo sin datos disponibles.",
+                    "remove_calc_sensor": "Si no quieres usar un sensor de cálculo, puedes quitarlo aquí. El sensor dejará de mostrar los valores de los atributos.",
+                    "source_calc_multiplier": "Si necesitas ajustar el cálculo para que coincida con el sensor de origen sin procesar, puedes establecer aquí el multiplicador. Por ejemplo, si tu sensor de cálculo de entrada está en $/kWh y tu sensor de consumo está en MW, tendrías que establecerlo en 1000 para obtener el precio correcto.",
+                    "source_calc_sensor": "Si quieres usar un sensor para calcular un atributo de precio del contador, selecciónalo aquí. Si no lo seleccionas, el contador solo mostrará el valor de origen.",
+                    "week_start_day": "Elige el primer día de la semana para los contadores semanales o usa la configuración regional de Home Assistant.",
+                    "tariffs": "Lista de tarifas admitidas; déjala vacía si solo necesitas una tarifa. Si quieres registrar el consumo total, añade una tarifa 'total'."
+                }
+            },
+            "init_2": {
+                "data": {
+                    "config_calibrate_apply": "Aplicar calibración",
+                    "config_calibrate_value": "Valor de calibración",
+                    "config_cron": "Patrón CRON personalizado",
+                    "config_type": "Tipo de configuración",
+                    "source_calc_multiplier": "Factor de ajuste del sensor de cálculo (opcional)"
+                },
+                "data_description": {
+                    "config_calibrate_apply": "Selecciona el sensor al que se debe aplicar el valor de calibración.",
+                    "config_calibrate_value": "Establece el valor al que se debe calibrar el contador.",
+                    "config_cron": "Introduce un patrón CRON personalizado para el ciclo de reinicio.",
+                    "config_type": "Elige entre ciclos predefinidos o patrones CRON personalizados.",
+                    "source_calc_multiplier": "Si necesitas ajustar el cálculo para que coincida con el sensor de origen sin procesar, puedes establecer aquí el multiplicador."
+                },
+                "title": "Configurar opciones"
+            }
+        }
+    },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Cada dos meses",
+                "daily": "Diariamente",
+                "every-five-minutes": "Cada 5 minutos",
+                "every-ten-minutes": "Cada 10 minutos",
+                "every-twenty-minutes": "Cada 20 minutos",
+                "half-hourly": "Cada 30 minutos",
+                "half-yearly": "Semestralmente",
+                "hourly": "Cada hora",
+                "monthly": "Mensualmente",
+                "none": "Sin ciclo",
+                "quarter-hourly": "Cada 15 minutos",
+                "quarterly": "Trimestralmente",
+                "weekly": "Semanalmente",
+                "yearly": "Anualmente"
+            }
+        },
+        "config_type": {
+            "options": {
+                "cron": "Crear con un patrón CRON personalizado",
+                "predefined": "Crear con un ciclo de reinicio predefinido",
+                "multi": "Crear varios contadores con ciclos de reinicio predefinidos"
+            }
+        },
+        "week_start_day": {
+            "options": {
+                "default": "Usar la configuración regional de Home Assistant",
+                "monday": "Lunes",
+                "sunday": "Domingo"
+            }
+        }
+    },
+    "services": {
+        "calibrate": {
+            "description": "Calibra un sensor de contador de consumo.",
+            "fields": {
+                "value": {
+                    "description": "Valor al que establecer el contador.",
+                    "name": "Valor"
+                }
+            },
+            "name": "Calibrar"
+        },
+        "reset": {
+            "description": "Restablece todos los contadores de un contador de consumo.",
+            "name": "Restablecer"
+        }
+    }
+}
