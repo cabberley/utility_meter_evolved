@@ -227,13 +227,22 @@ async def async_setup_entry(
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = config_entry.options[CONF_METER_OFFSET]
     meter_type = config_entry.options[CONF_METER_TYPE]
-    week_start_day = _resolve_week_start_day(
+    # Babel loads locale data from disk, so resolve off the event loop.
+    week_start_day = await hass.async_add_executor_job(
+        _resolve_week_start_day,
         config_entry.options.get(CONF_WEEK_START_DAY, WEEK_START_DAY_DEFAULT),
         hass.config.language,
         hass.config.country,
     )
     if meter_type == "none":
         meter_type = None
+    if isinstance(meter_type, list):
+        # Multi-cycle configs store a list; a single selected cycle (or an
+        # empty selection) must collapse to a plain value for PERIOD2CRON.
+        if len(meter_type) == 0:
+            meter_type = None
+        elif len(meter_type) == 1:
+            meter_type = meter_type[0]
     name = config_entry.title
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
@@ -537,8 +546,11 @@ async def async_setup_platform(
             conf_sensor_name = conf_meter_name
 
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
-        week_start_day = _resolve_week_start_day(
-            WEEK_START_DAY_DEFAULT, hass.config.language, hass.config.country
+        week_start_day = await hass.async_add_executor_job(
+            _resolve_week_start_day,
+            WEEK_START_DAY_DEFAULT,
+            hass.config.language,
+            hass.config.country,
         )
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
         conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
